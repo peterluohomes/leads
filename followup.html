@@ -37,14 +37,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .btn-read { background: transparent; border: 1.5px solid #7aacdc; color: #7aacdc; }
 .btn-read:hover { background: #7aacdc; color: var(--navy); }
 
-.col-headers { background: var(--navy); display: grid; grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 44px; gap: 0; padding: 8px 10px 8px 14px; border-bottom: 1px solid rgba(201,168,76,0.4); position: sticky; top: 0; z-index: 10; }
+.col-headers { background: var(--navy); display: grid; grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 44px 32px; gap: 0; padding: 8px 10px 8px 14px; border-bottom: 1px solid rgba(201,168,76,0.4); position: sticky; top: 0; z-index: 10; }
 .col-headers span { font-size: var(--fs-label); font-weight: 600; color: var(--gold); letter-spacing: 0.9px; text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
 
 .sort-btn { background: rgba(201,168,76,0.2); border: 1px solid rgba(201,168,76,0.5); border-radius: 4px; color: var(--gold); font-size: 11px; padding: 2px 6px; cursor: pointer; transition: all 0.15s; }
 .sort-btn:hover { background: var(--gold); color: var(--navy); }
 
 .rows-container { padding: 0 0 100px; }
-.lead-row { display: grid; grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 44px; gap: 0; align-items: center; border-bottom: 1px solid var(--border); padding: 4px 10px 4px 14px; min-height: var(--row-h); transition: background 0.1s; }
+.lead-row { display: grid; grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 44px 32px; gap: 0; align-items: center; border-bottom: 1px solid var(--border); padding: 4px 10px 4px 14px; min-height: var(--row-h); transition: background 0.1s; }
 .lead-row:nth-child(even) { background: var(--row-even); }
 .lead-row:nth-child(odd)  { background: var(--row-odd); }
 .lead-row:hover { background: #ede5cc; }
@@ -65,6 +65,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .expand-btn::after { content:''; position:absolute; inset:-6px; }
 .expand-btn:hover { background: var(--gold); color: var(--navy); }
 .expand-btn.has-data { background: var(--gold); color: var(--navy); }
+.remove-btn { width: 26px; height: 26px; border-radius: 50%; background: transparent; color: #bbb; border: 1.5px solid #ccc; font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; padding: 0; }
+.remove-btn:hover { background: var(--hot); color: white; border-color: var(--hot); }
 
 .add-row-bar { padding: 12px 14px; border-top: 2px dashed var(--border); }
 .add-row-btn { background: none; border: 1.5px dashed var(--border); border-radius: 6px; color: var(--muted); padding: 12px 18px; font-size: var(--fs-base); cursor: pointer; width: 100%; min-height: var(--tap); transition: all 0.15s; }
@@ -132,7 +134,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .print-detail { display: none; }
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .toolbar-btns, .expand-btn, .add-row-bar, .panel-overlay, .detail-panel, .page-footer, .sort-btn { display: none !important; }
+  .toolbar-btns, .expand-btn, .remove-btn, .add-row-bar, .panel-overlay, .detail-panel, .page-footer, .sort-btn { display: none !important; }
   body { background: white; font-size: 11px; }
   .lead-row { min-height: 26px; padding: 3px 10px 3px 14px; }
   .cell input { font-size: 11px; padding: 2px 3px; }
@@ -156,9 +158,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .reminder { font-size: 13px; padding: 8px 12px; }
   .session-bar { padding: 10px 16px; gap: 10px; }
   .session-field input { font-size: 15px; padding: 9px 10px; }
-  .col-headers { grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 50px; padding: 10px 12px 10px 16px; }
+  .col-headers { grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 50px 32px; padding: 10px 12px 10px 16px; }
   .col-headers span { font-size: 12px; }
-  .lead-row { grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 50px; padding: 6px 12px 6px 16px; }
+  .lead-row { grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 50px 32px; padding: 6px 12px 6px 16px; }
   .cell input { font-size: var(--fs-cell); padding: 8px 5px; min-height: 40px; }
   .expand-btn { width: 40px; height: 40px; font-size: 20px; }
   .detail-panel { right: -95vw; } .detail-panel.open { right: 0; }
@@ -218,8 +220,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .lead-row .cell:nth-child(6) { display:none; }
   .lead-row .cell:nth-child(7) { display:none; }
 
-  /* Cell 8 = expand btn: spans 2 rows */
-  .lead-row .cell:nth-child(8) { grid-column:5; grid-row:1/3; display:flex; align-items:center; justify-content:center; }
+  /* Cell 8 = expand btn: top of col 5 */
+  .lead-row .cell:nth-child(8) { grid-column:5; grid-row:1; display:flex; align-items:center; justify-content:center; }
+
+  /* Cell 9 = remove btn: bottom of col 5 */
+  .lead-row .cell:nth-child(9) { grid-column:5; grid-row:2; display:flex; align-items:center; justify-content:center; }
 
   /* Mobile date/time/method injected cells */
   .mob-date-time { grid-column:4; grid-row:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:11px; color:var(--text); font-family:'DM Mono',monospace; }
@@ -266,6 +271,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
     <button class="btn btn-read" onclick="document.getElementById('read-dk-input').click()">📋 Read</button>
     <input type="file" id="read-dk-input" accept=".json" style="display:none" onchange="readDoorKnock(event)">
+    <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
+    <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
     <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
   </div>
 </div>
@@ -278,6 +285,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   <span>Follow-Up Date <button class="sort-btn" id="sort-date-btn" onclick="sortByDate()">↕</button></span>
   <span>Time</span>
   <span>Method</span>
+  <span></span>
   <span></span>
 </div>
 
@@ -501,7 +509,8 @@ function splitName(name) {
   return [p[p.length-1], p.slice(0,p.length-1).join(' ')];
 }
 
-function isMobile() { return window.innerWidth <= 500; }
+var mobileMediaQuery = window.matchMedia('(max-width: 500px)');
+function isMobile() { return mobileMediaQuery.matches; }
 
 function render() {
   var c = document.getElementById('rows-container');
@@ -555,9 +564,10 @@ function render() {
       // Placeholder cells 5,6,7 (hidden by CSS)
       var hidden = '<div class="cell"></div><div class="cell"></div><div class="cell"></div>';
 
-      // Cell 8: expand btn
-      var btnCell = '<div class="cell" style="grid-column:5;grid-row:1/3;display:flex;align-items:center;justify-content:center;">' +
-        '<button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>';
+      // Cell 8: expand btn, Cell 9: remove btn — both placed in col 5 by nth-child CSS
+      var btnCell =
+        '<div class="cell"><button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>' +
+        '<div class="cell"><button class="remove-btn" onclick="removeRow(' + i + ')" title="Remove">&#8722;</button></div>';
 
       div.innerHTML = addrCell + nameCell + phoneCell + tempDateCell + hidden + btnCell;
 
@@ -573,7 +583,8 @@ function render() {
         '<div class="cell" style="display:flex;align-items:center;">' + ddisp + '</div>' +
         '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.futime||'') + '</span></div>' +
         '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.fumethod||'') + '</span></div>' +
-        '<div class="cell" style="display:flex;align-items:center;justify-content:center;"><button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>';
+        '<div class="cell" style="display:flex;align-items:center;justify-content:center;"><button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>' +
+      '<div class="cell" style="display:flex;align-items:center;justify-content:center;"><button class="remove-btn" onclick="removeRow(' + i + ')" title="Remove">&#8722;</button></div>';
     }
 
     c.appendChild(div);
@@ -589,6 +600,48 @@ function render() {
 function addRow() {
   rows.push(makeRow()); render();
   setTimeout(function(){ var c=document.getElementById('rows-container'); if(c.lastElementChild) c.lastElementChild.scrollIntoView({behavior:'smooth'}); },50);
+}
+
+function removeRow(idx) {
+  var r = rows[idx];
+  var hasData = r.address || r.name || r.phone || r.temp || r.detail;
+  if (hasData) {
+    var label = r.address || r.name || 'this record';
+    if (!confirm('Remove "' + label + '"?')) return;
+  }
+  rows.splice(idx, 1);
+  render();
+}
+
+function addFromFollowUp(event) {
+  var file = event.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var s = JSON.parse(e.target.result);
+      if (!Array.isArray(s.rows)) { alert('No rows found in file.'); return; }
+      var imported = 0;
+      s.rows.forEach(function(r) {
+        if (!r.address && !r.name && !r.phone && !r.temp && !r.detail) return;
+        var isDup = (r.address || r.name) && rows.some(function(x) {
+          return (x.address || x.name) && x.address === r.address && x.name === r.name;
+        });
+        if (isDup) return;
+        rows.push({ address:r.address||'', name:r.name||'', phone:r.phone||'', temp:r.temp||'',
+          fudate:r.fudate||'', futime:r.futime||'', fumethod:r.fumethod||'', detail:r.detail||null });
+        imported++;
+      });
+      var filled = rows.filter(function(r){ return r.address||r.name||r.phone||r.temp||r.detail; });
+      var empty  = rows.filter(function(r){ return !r.address&&!r.name&&!r.phone&&!r.temp&&!r.detail; });
+      rows = filled.concat(empty);
+      var msg = imported === 0
+        ? 'No new records added (all duplicates or empty).'
+        : '✅ ' + imported + ' record' + (imported > 1 ? 's' : '') + ' appended.';
+      event.target.value = '';
+      setTimeout(function() { render(); alert(msg); }, 0);
+    } catch(err) { alert('Could not read file.'); event.target.value = ''; }
+  };
+  reader.readAsText(file);
 }
 
 function openPanel(idx) {
