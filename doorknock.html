@@ -1109,9 +1109,11 @@ function saveSession() {
   const blob = new Blob([JSON.stringify(session, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  const dateStr = session.date || new Date().toISOString().slice(0,10);
-  const st = (session.street||'session').replace(/[^a-z0-9]/gi,'_').slice(0,20);
-  a.download = `dk_session_${dateStr}_${st}.json`;
+  const streetVal = (session.street||'').trim();
+  const st = streetVal
+    ? streetVal.replace(/\s+/g,'_')
+    : (session.date || new Date().toISOString().slice(0,10));
+  a.download = `DK_${st}.json`;
   a.click();
 }
 
