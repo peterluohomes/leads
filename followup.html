@@ -109,6 +109,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .panel-save-row { display: flex; gap: 10px; margin-top: 20px; }
 .panel-save-row .btn { flex: 1; justify-content: center; font-size: var(--fs-base); padding: 12px; }
 
+.mob-col-header { display:none; }
+@media screen and (max-width:500px) {
+  .mob-col-header {
+    display:grid;
+    grid-template-columns: 1fr 1fr 72px 72px 44px;
+    background:var(--navy);
+    padding:6px 8px 6px 10px;
+    border-bottom:1px solid rgba(201,168,76,0.4);
+    position:sticky; top:0; z-index:10;
+  }
+  .mob-col-header span {
+    font-size:9px; font-weight:700; color:var(--gold);
+    letter-spacing:0.7px; text-transform:uppercase;
+    display:flex; align-items:center; gap:3px;
+  }
+  .mob-col-header .mch-btn { background:rgba(201,168,76,0.2); border:1px solid rgba(201,168,76,0.5); border-radius:3px; color:var(--gold); font-size:9px; padding:1px 4px; cursor:pointer; }
+}
 .page-footer { border-top: 2px solid var(--gold); padding: 12px 28px; display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); background: var(--cream2); }
 .page-footer strong { color: var(--navy); }
 
@@ -155,24 +172,79 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 }
 
 @media screen and (max-width: 500px) {
-  :root { --row-h:56px; --fs-base:15px; --fs-label:11px; --fs-cell:14px; --panel-w:100vw; }
+  :root { --fs-base:15px; --fs-label:11px; --fs-cell:13px; --panel-w:100vw; }
   .page-header { padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
   .reminder { font-size: 12px; padding: 7px 10px; white-space: normal; width: 100%; }
   .session-bar { padding: 8px 12px; gap: 8px; }
   .session-field { flex: 1 1 auto; min-width: 130px; }
   .toolbar-btns { width: 100%; justify-content: flex-end; margin-left: 0; flex-wrap: wrap; }
   .btn { font-size: 12px; padding: 9px 12px; }
-  .col-headers { grid-template-columns: 2fr 1.2fr 80px 44px; padding: 8px 10px 8px 12px; }
-  .lead-row    { grid-template-columns: 2fr 1.2fr 80px 44px; padding: 5px 10px 5px 12px; }
-  .col-headers span:nth-child(3), .col-headers span:nth-child(5),
-  .col-headers span:nth-child(6), .col-headers span:nth-child(7),
-  .lead-row .cell:nth-child(3),   .lead-row .cell:nth-child(5),
-  .lead-row .cell:nth-child(6) { display: none; }
-  .expand-btn { width: 42px; height: 42px; font-size: 20px; }
+
+  /* Hide desktop col-headers entirely on mobile */
+  .col-headers { display: none; }
+
+  /* Two-line card row */
+  .lead-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 72px 72px 44px;
+    grid-template-rows: auto auto;
+    gap: 0 4px;
+    padding: 5px 8px 5px 10px;
+    min-height: unset;
+    align-items: start;
+  }
+
+  /* Line 1: address | last name | phone-top | date | pencil (spans 2 rows) */
+  /* Line 2: address2 | first name | phone-bot | time | — */
+
+  /* Cell 1 = Address (spans 2 rows, stacked via flex) */
+  .lead-row .cell:nth-child(1) { grid-column:1; grid-row:1/3; display:flex; flex-direction:column; justify-content:center; }
+  .lead-row .cell:nth-child(1) input { font-size:12px; padding:1px 3px; min-height:unset; line-height:1.3; }
+
+  /* Cell 2 = Name (spans 2 rows, stacked last/first) */
+  .lead-row .cell:nth-child(2) { grid-column:2; grid-row:1/3; display:flex; flex-direction:column; justify-content:center; }
+  .lead-row .cell:nth-child(2) input { font-size:12px; padding:1px 3px; min-height:unset; line-height:1.3; }
+
+  /* Cell 3 = Phone: row 1 top half, row 2 bottom half */
+  .lead-row .cell:nth-child(3) { grid-column:3; grid-row:1/3; display:flex; flex-direction:column; justify-content:center; gap:1px; }
+  .lead-row .cell:nth-child(3) input { font-size:11px; padding:1px 2px; min-height:unset; font-family:'DM Mono',monospace; line-height:1.3; }
+
+  /* Cell 4 = Temp pill: row 1 */
+  .lead-row .cell:nth-child(4) { grid-column:4; grid-row:1; display:flex; align-items:center; justify-content:center; }
+
+  /* Cell 5 = Follow-Up Date: row 1, Cell 6 = Time: row 2 — both in col 4 */
+  /* We'll restructure via JS for mobile. Hide cells 5,6,7 from default flow */
+  .lead-row .cell:nth-child(5) { display:none; }
+  .lead-row .cell:nth-child(6) { display:none; }
+  .lead-row .cell:nth-child(7) { display:none; }
+
+  /* Cell 8 = expand btn: spans 2 rows */
+  .lead-row .cell:nth-child(8) { grid-column:5; grid-row:1/3; display:flex; align-items:center; justify-content:center; }
+
+  /* Mobile date/time/method injected cells */
+  .mob-date-time { grid-column:4; grid-row:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:11px; color:var(--text); font-family:'DM Mono',monospace; }
+  .mob-method-line { font-size:10px; color:var(--muted); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:68px; }
+
+  /* Mobile name split: last on top, first below */
+  .mob-last  { font-weight:600; color:var(--text); }
+  .mob-first { color:var(--muted); }
+
+  /* Mobile phone split: (###)### on top, -#### below */
+  .mob-phone-top  { font-weight:500; }
+  .mob-phone-bot  { color:var(--muted); }
+
+  /* Mobile address split: first part top, rest below */
+  .mob-addr-top { font-weight:500; color:var(--text); }
+  .mob-addr-bot { color:var(--muted); }
+
+  .mob-label { font-size:9px; font-weight:700; color:var(--gold); letter-spacing:0.6px; text-transform:uppercase; margin-bottom:1px; }
+
+  .expand-btn { width: 38px; height: 38px; font-size: 18px; }
   .detail-panel { right: -100vw; } .detail-panel.open { right: 0; }
   .fg.c2, .fg.c3 { grid-template-columns: 1fr; }
   .pf input, .pf select, .pf textarea { font-size: 16px; }
   .ck-grid { grid-template-columns: 1fr; }
+  .temp-pill { font-size:10px; padding:2px 7px; }
 }
 </style>
 </head>
@@ -206,6 +278,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   <span>Follow-Up Date <button class="sort-btn" id="sort-date-btn" onclick="sortByDate()">↕</button></span>
   <span>Time</span>
   <span>Method</span>
+  <span></span>
+</div>
+
+<div class="mob-col-header">
+  <span>Address</span>
+  <span>Name</span>
+  <span>Phone</span>
+  <span>Temp / Date <button class="mch-btn" onclick="sortByDate()">↕</button></span>
   <span></span>
 </div>
 
@@ -390,9 +470,43 @@ function getTempOrder(t) { return (t && TEMP_ORDER[t] !== undefined) ? TEMP_ORDE
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function splitAddress(addr) {
+  // Split address into two lines: street number+name on line 1, city/province on line 2
+  if (!addr) return ['',''];
+  var comma = addr.indexOf(',');
+  if (comma > 0) return [addr.slice(0,comma).trim(), addr.slice(comma+1).trim()];
+  // Try splitting at last space if single word
+  var parts = addr.trim().split(/\s+/);
+  if (parts.length <= 3) return [addr, ''];
+  var mid = Math.ceil(parts.length / 2);
+  return [parts.slice(0,mid).join(' '), parts.slice(mid).join(' ')];
+}
+
+function splitPhone(ph) {
+  // (416)555-1234 → top:(416)555  bot:-1234
+  if (!ph) return ['',''];
+  var m = ph.match(/^(\(\d{3}\))(\d{3})(-\d{4})?$/);
+  if (m) return [m[1]+(m[2]||''), m[3]||''];
+  return [ph, ''];
+}
+
+function splitName(name) {
+  // "Last, First" or "First Last" → [last, first]
+  if (!name) return ['',''];
+  if (name.indexOf(',') > 0) {
+    var p = name.split(','); return [p[0].trim(), p[1].trim()];
+  }
+  var p = name.trim().split(/\s+/);
+  if (p.length === 1) return [p[0], ''];
+  return [p[p.length-1], p.slice(0,p.length-1).join(' ')];
+}
+
+function isMobile() { return window.innerWidth <= 500; }
+
 function render() {
   var c = document.getElementById('rows-container');
   c.innerHTML = '';
+  var mobile = isMobile();
   rows.forEach(function(r, i) {
     var div = document.createElement('div');
     div.className = 'lead-row';
@@ -400,18 +514,68 @@ function render() {
       ? '<span class="temp-pill ' + r.temp + '">' + (TEMP_LABELS[r.temp]||r.temp) + '</span>'
       : '<span class="temp-pill none">&mdash;</span>';
     var dc = dateClass(r.fudate);
-    var ddisp = r.fudate
-      ? '<span class="' + dc + '" style="font-family:\'DM Mono\',monospace;font-size:13px;">' + r.fudate + '</span>'
-      : '<span style="color:var(--border)">&mdash;</span>';
-    div.innerHTML =
-      '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value"></div>' +
-      '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value"></div>' +
-      '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value" style="font-family:\'DM Mono\',monospace;"></div>' +
-      '<div class="cell" style="display:flex;align-items:center;">' + tpill + '</div>' +
-      '<div class="cell" style="display:flex;align-items:center;">' + ddisp + '</div>' +
-      '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.futime||'') + '</span></div>' +
-      '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.fumethod||'') + '</span></div>' +
-      '<div class="cell" style="display:flex;align-items:center;justify-content:center;"><button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>';
+
+    if (mobile) {
+      var addrParts = splitAddress(r.address);
+      var nameParts = splitName(r.name);
+      var phoneParts = splitPhone(r.phone);
+      var ddisp = r.fudate
+        ? '<span class="' + dc + '">' + r.fudate + '</span>'
+        : '<span style="color:var(--border)">—</span>';
+      var tdisp = r.futime
+        ? '<span class="mob-phone-bot">' + esc(r.futime) + '</span>'
+        : '<span style="color:var(--border)">—</span>';
+      var mdisp = r.fumethod ? esc(r.fumethod) : '—';
+
+      // Cell 1: Address stacked
+      var addrCell = '<div class="cell">' +
+        '<div class="mob-addr-top">' + (esc(addrParts[0])||'<span style="color:var(--border)">Address</span>') + '</div>' +
+        (addrParts[1] ? '<div class="mob-addr-bot">' + esc(addrParts[1]) + '</div>' : '<div class="mob-addr-bot" style="color:var(--border)">—</div>') +
+        '</div>';
+
+      // Cell 2: Name stacked last / first
+      var nameCell = '<div class="cell">' +
+        '<div class="mob-last">' + (esc(nameParts[0])||'<span style="color:var(--border)">Last</span>') + '</div>' +
+        '<div class="mob-first">' + (esc(nameParts[1])||'<span style="color:var(--border)">First</span>') + '</div>' +
+        '</div>';
+
+      // Cell 3: Phone stacked (###)### / -####
+      var phoneCell = '<div class="cell">' +
+        '<div class="mob-phone-top">' + (esc(phoneParts[0])||'<span style="color:var(--border)">Phone</span>') + '</div>' +
+        '<div class="mob-phone-bot">' + (esc(phoneParts[1])||'<span style="color:var(--border)">—</span>') + '</div>' +
+        '</div>';
+
+      // Cell 4: Temp pill row1 + date/time/method stacked
+      var tempDateCell = '<div class="cell" style="grid-column:4;grid-row:1;display:flex;align-items:center;justify-content:center;">' + tpill + '</div>' +
+        '<div class="mob-date-time" style="grid-column:4;grid-row:2;">' +
+          ddisp + tdisp +
+          '<div class="mob-method-line">' + mdisp + '</div>' +
+        '</div>';
+
+      // Placeholder cells 5,6,7 (hidden by CSS)
+      var hidden = '<div class="cell"></div><div class="cell"></div><div class="cell"></div>';
+
+      // Cell 8: expand btn
+      var btnCell = '<div class="cell" style="grid-column:5;grid-row:1/3;display:flex;align-items:center;justify-content:center;">' +
+        '<button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>';
+
+      div.innerHTML = addrCell + nameCell + phoneCell + tempDateCell + hidden + btnCell;
+
+    } else {
+      var ddisp = r.fudate
+        ? '<span class="' + dc + '" style="font-family:\'DM Mono\',monospace;font-size:13px;">' + r.fudate + '</span>'
+        : '<span style="color:var(--border)">&mdash;</span>';
+      div.innerHTML =
+        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value"></div>' +
+        '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value" style="font-family:\'DM Mono\',monospace;"></div>' +
+        '<div class="cell" style="display:flex;align-items:center;">' + tpill + '</div>' +
+        '<div class="cell" style="display:flex;align-items:center;">' + ddisp + '</div>' +
+        '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.futime||'') + '</span></div>' +
+        '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.fumethod||'') + '</span></div>' +
+        '<div class="cell" style="display:flex;align-items:center;justify-content:center;"><button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>';
+    }
+
     c.appendChild(div);
     if (r.detail) {
       var db = document.createElement('div');
@@ -603,6 +767,8 @@ function readDoorKnock(event) {
   document.getElementById('sess-date').value = y+'-'+m+'-'+d;
   for(var i=0;i<10;i++) rows.push(makeRow());
   render();
+  var resizeTimer;
+  window.addEventListener('resize', function(){ clearTimeout(resizeTimer); resizeTimer=setTimeout(render,150); });
 })();
 </script>
 </body>
