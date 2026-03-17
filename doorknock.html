@@ -130,7 +130,7 @@ body {
 .col-headers {
   background: var(--navy);
   display: grid;
-  grid-template-columns: 100px 90px 72px 60px 72px 1fr 44px;
+  grid-template-columns: 100px 90px 72px 60px 72px 80px 1fr 44px;
   gap: 0;
   padding: 8px 10px 8px 14px;
   border-bottom: 1px solid rgba(201,168,76,0.4);
@@ -147,7 +147,7 @@ body {
 
 .door-row {
   display: grid;
-  grid-template-columns: 100px 90px 72px 60px 72px 1fr 44px;
+  grid-template-columns: 100px 90px 72px 60px 72px 80px 1fr 44px;
   gap: 0;
   align-items: center;
   border-bottom: 1px solid var(--border);
@@ -454,13 +454,13 @@ body {
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
-    grid-template-columns: 110px 100px 80px 68px 80px 1fr 50px;
+    grid-template-columns: 110px 100px 80px 68px 80px 80px 1fr 50px;
     padding: 10px 12px 10px 16px;
   }
   .col-headers span { font-size: 12px; letter-spacing: 0.5px; }
 
   .door-row {
-    grid-template-columns: 110px 100px 80px 68px 80px 1fr 50px;
+    grid-template-columns: 110px 100px 80px 68px 80px 80px 1fr 50px;
     padding: 6px 12px 6px 16px;
     min-height: var(--row-h);
   }
@@ -513,16 +513,16 @@ body {
 
   /* simplified grid for phone — hide note, show on expand */
   .col-headers {
-    grid-template-columns: 90px 88px 60px 60px 1fr 50px;
+    grid-template-columns: 90px 88px 60px 70px 1fr 50px;
     padding: 8px 10px 8px 12px;
   }
   .col-headers span { font-size: 11px; }
-  /* hide gender col on phone */
+  /* hide gender col (4th) on phone */
   .col-headers span:nth-child(4),
   .door-row .cell:nth-child(4) { display: none; }
 
   .door-row {
-    grid-template-columns: 90px 88px 60px 60px 1fr 50px;
+    grid-template-columns: 90px 88px 60px 70px 1fr 50px;
     padding: 5px 10px 5px 12px;
     min-height: var(--row-h);
   }
@@ -626,6 +626,7 @@ body {
   <span>Gender</span>
   <span>Age~</span>
   <span>Temp</span>
+  <span>Last Knock</span>
   <span>Quick Note</span>
   <span></span>
 </div>
@@ -832,7 +833,7 @@ const GENDERS = ['—','Male','Female','Couple','Other'];
 
 function makeRow() {
   return {
-    stnum:'', race:'', gender:'', age:'', temp:'', note:'',
+    stnum:'', race:'', gender:'', age:'', temp:'', note:'', lastknock:'',
     detail: null   // null means no detail yet
   };
 }
@@ -896,6 +897,21 @@ function buildDetailBlock(r, i) {
 // ─────────────────────────────────────────
 // RENDER
 // ─────────────────────────────────────────
+function stampKnock(i) {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(2);
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const stamp = `${yy}.${mm}.${dd}`;
+  rows[i].lastknock = stamp;
+  // update the input in the DOM without a full re-render
+  const cells = document.getElementById('rows-container').querySelectorAll('.door-row');
+  if (cells[i]) {
+    const lkInput = cells[i].querySelectorAll('.cell input[placeholder="YY.MM.DD"]')[0];
+    if (lkInput) lkInput.value = stamp;
+  }
+}
+
 function render() {
   const c = document.getElementById('rows-container');
   c.innerHTML = '';
@@ -907,17 +923,17 @@ function render() {
         <input class="stnum" type="text" value="${r.stnum}" placeholder="" pattern="[0-9]+[A-Ka-k]?" oninput="this.value=this.value.replace(/[^0-9A-Ka-k]/g,'').replace(/([A-Ka-k]).*$/,'$1');rows[${i}].stnum=this.value" style="font-family:'DM Mono',monospace;width:100%;text-transform:uppercase;">
       </div>
       <div class="cell">
-        <select onchange="rows[${i}].race=this.value">
+        <select onchange="rows[${i}].race=this.value;stampKnock(${i})">
           ${RACES.map(x=>`<option${r.race===x?' selected':''}>${x}</option>`).join('')}
         </select>
       </div>
       <div class="cell">
-        <select onchange="rows[${i}].gender=this.value">
+        <select onchange="rows[${i}].gender=this.value;stampKnock(${i})">
           ${GENDERS.map(x=>`<option${r.gender===x?' selected':''}>${x}</option>`).join('')}
         </select>
       </div>
       <div class="cell">
-        <input type="number" value="${r.age}" min="20" max="99" placeholder="" oninput="rows[${i}].age=this.value">
+        <input type="number" value="${r.age}" min="20" max="99" placeholder="" oninput="rows[${i}].age=this.value;stampKnock(${i})">
       </div>
       <div class="cell">
         <select onchange="rows[${i}].temp=this.value">
@@ -929,8 +945,11 @@ function render() {
           <option value="dnc"${r.temp==='dnc'?' selected':''}>⛔ DNC</option>
         </select>
       </div>
+      <div class="cell">
+        <input type="text" value="${r.lastknock||''}" placeholder="YY.MM.DD" maxlength="8" style="font-family:'DM Mono',monospace;font-size:12px;" oninput="rows[${i}].lastknock=this.value">
+      </div>
       <div class="cell cell-note">
-        <input type="text" value="${r.note||''}" placeholder="Quick note…" oninput="rows[${i}].note=this.value">
+        <input type="text" value="${r.note||''}" placeholder="Quick note…" oninput="rows[${i}].note=this.value;stampKnock(${i})">
       </div>
       <div class="cell">
         <button class="expand-btn${r.detail?' has-data':''}" onclick="openPanel(${i})" title="${r.detail?'Edit detail':'Add detail'}">
