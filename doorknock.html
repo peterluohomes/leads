@@ -621,7 +621,7 @@ body {
 
 <!-- ══════════ COLUMN HEADERS ══════════ -->
 <div class="col-headers">
-  <span>St. No.</span>
+  <span onclick="sortByStreetNum()" title="Sort by street number" style="cursor:pointer;user-select:none;gap:5px;">St. No.<span id="sort-icon" style="font-size:13px;opacity:0.6;">⇅</span></span>
   <span>Race</span>
   <span>Gender</span>
   <span>Age~</span>
@@ -827,6 +827,7 @@ let rows = [];          // array of row objects
 let activeRowIdx = null; // which row the panel is editing
 let panelStarVal = 0;
 let panelTemp = '';
+let sortDir = 0; // 0 = unsorted, 1 = asc, -1 = desc
 
 const RACES = ['—','Chinese','South Asian','East Asian','Caucasian','Black','Hispanic','Middle Eastern','Other'];
 const GENDERS = ['—','Male','Female','Couple','Other'];
@@ -895,8 +896,30 @@ function buildDetailBlock(r, i) {
 }
 
 // ─────────────────────────────────────────
-// RENDER
+// SORT BY STREET NUMBER
 // ─────────────────────────────────────────
+function sortByStreetNum() {
+  // cycle: unsorted → asc → desc → asc ...
+  sortDir = sortDir <= 0 ? 1 : -1;
+  const icon = document.getElementById('sort-icon');
+
+  const parseNum = v => parseInt((v||'').replace(/[^0-9]/g,''), 10) || 0;
+
+  rows.sort((a, b) => {
+    const na = parseNum(a.stnum), nb = parseNum(b.stnum);
+    // push empty rows to the bottom regardless of direction
+    if (!a.stnum && !b.stnum) return 0;
+    if (!a.stnum) return 1;
+    if (!b.stnum) return -1;
+    return sortDir * (na - nb);
+  });
+
+  icon.textContent = sortDir === 1 ? '↑' : '↓';
+  icon.style.opacity = '1';
+  render();
+}
+
+
 function stampKnock(i) {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(2);
