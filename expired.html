@@ -277,6 +277,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
     <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
     <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
+    <button class="btn btn-outline" onclick="exportLeadFollowup()">📤 Export</button>
     <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
   </div>
 </div>
@@ -833,6 +834,75 @@ function saveSession() {
   a.click();
 }
 
+function exportLeadFollowup() {
+  // Export rows in lead_followup format — only fields used by the follow-up tracker.
+  // Skips empty rows and strips propDetail (property sheet data).
+  var exportRows = rows
+    .filter(function(r){
+      if (!r.detail) return false;
+      var d = r.detail;
+      // Only export if user has manually filled at least one human-entered field
+      // (excludes auto-populated reason/hook from the Python importer)
+      return !!(d.fname || d.lname || d.phone || d.email ||
+                d.temp || d.fudate || d.attitude ||
+                d.moving || d.obj || d.res || d.personal ||
+                d.referrals || d.promised ||
+                (d.signals && d.signals.length) || d.stars);
+    })
+    .map(function(r){
+      // Build a clean detail object with exactly the lead_followup keys
+      var det = null;
+      if (r.detail) {
+        var src = r.detail;
+        det = {
+          fname:      src.fname      || '',
+          lname:      src.lname      || '',
+          address:    src.address    || r.address || '',
+          phone:      src.phone      || r.phone   || '',
+          email:      src.email      || '',
+          unit:       src.unit       || '',
+          years:      src.years      || '',
+          besttime:   src.besttime   || '',
+          proptype:   src.proptype   || '',
+          lang:       src.lang       || '',
+          attitude:   src.attitude   || '',
+          temp:       src.temp       || r.temp    || '',
+          moving:     src.moving     || '',
+          reason:     src.reason     || '',
+          obj:        src.obj        || '',
+          res:        src.res        || '',
+          personal:   src.personal   || '',
+          referrals:  src.referrals  || '',
+          signals:    src.signals    || [],
+          fudate:     src.fudate     || r.fudate  || '',
+          futime:     src.futime     || r.futime  || '',
+          fumethod:   src.fumethod   || r.fumethod|| '',
+          promised:   src.promised   || '',
+          hook:       src.hook       || '',
+          stars:      src.stars      || 0
+        };
+      }
+      return {
+        address:  r.address  || '',
+        name:     r.name     || '',
+        phone:    r.phone    || '',
+        temp:     r.temp     || '',
+        fudate:   r.fudate   || '',
+        futime:   r.futime   || '',
+        fumethod: r.fumethod || '',
+        detail:   det
+      };
+    });
+
+  var sessDate = document.getElementById('sess-date').value || new Date().toISOString().slice(0,10);
+  var out = { date: sessDate, rows: exportRows };
+  var blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lead_followup_' + sessDate + '.json';
+  a.click();
+}
+
 function loadSession(event) {
   var file = event.target.files[0]; if (!file) return;
   var reader = new FileReader();
@@ -908,7 +978,7 @@ function savePropDetail() {
   if (propPanelIdx === null) return;
   var idx = propPanelIdx;
   var d = {};
-  var textFields = ['mls','listprice','dom','offerdate','taxes','holdover','possession',
+  var textFields = ['sellers','mls','listprice','dom','offerdate','taxes','holdover','possession',
     'bed','bath','rms','kitchens','sqft','sqftabove','lot','fronting','yearbuilt','apxage',
     'heat','ac','garspcs','drivespcs','totpk','drivetype','laundry','exterior','rooftype','interiorFeat',
     'maint','locker','corpno','unitno','level','balcony','propMgmt','bldgAmen',
@@ -944,6 +1014,7 @@ function buildPropDetailHTML(d, idx) {
   function g2(a,b){ return '<div class="fg c2">'+a+b+'</div>'; }
 
   return '<div class="pcard"><div class="pcard-header">📋 Listing Info</div><div class="pcard-body"><div class="fg">'
+    +inp('sellers','Sellers','e.g. John Smith & Jane Smith')
     +inp('mls','MLS #','e.g. N12890700')
     +g2(inp('listprice','List Price','$1,388,000'),inp('dom','DOM','e.g. 7','number'))
     +g2(sel('laststatus','Last Status',['—','NEW','PC','SC','SLD','EXP','TER','SUS','LCHG']),inp('offerdate','Offer Date','','date'))
