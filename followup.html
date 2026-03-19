@@ -264,6 +264,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <label>Date</label>
     <input type="date" id="sess-date">
   </div>
+  <div style="display:flex;align-items:center;gap:7px;">
+    <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
+    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+  </div>
   <div class="toolbar-btns">
     <button class="btn btn-outline" onclick="addRow()">+ Row</button>
     <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
@@ -278,7 +282,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 </div>
 
 <div class="col-headers">
-  <span>Address</span>
+  <span>Address <button class="sort-btn" id="sort-addr-btn" onclick="sortByAddress()">↕</button></span>
   <span>Name</span>
   <span>Phone</span>
   <span>Temp <button class="sort-btn" id="sort-temp-btn" onclick="sortByTemp()">↕</button></span>
@@ -290,7 +294,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 </div>
 
 <div class="mob-col-header">
-  <span>Address</span>
+  <span>Address <button class="mch-btn" onclick="sortByAddress()">↕</button></span>
   <span>Name</span>
   <span>Phone</span>
   <span>Temp / Date <button class="mch-btn" onclick="sortByDate()">↕</button></span>
@@ -455,7 +459,7 @@ var SIGNAL_LABELS = [
   'Owns other properties','Recently renovated','Mentioned a neighbour selling'
 ];
 
-function makeRow() { return { address:'', name:'', phone:'', temp:'', fudate:'', futime:'', fumethod:'', detail:null }; }
+function makeRow() { return { address:'', name:'', phone:'', temp:'', fudate:'', futime:'', fumethod:'', detail:null, talked:false }; }
 
 function formatPhone(input) {
   var d = input.value.replace(/\D/g,'').slice(0,10), out = '';
@@ -511,6 +515,17 @@ function splitName(name) {
 
 var mobileMediaQuery = window.matchMedia('(max-width: 500px)');
 function isMobile() { return mobileMediaQuery.matches; }
+
+function updateCounter() {
+  var talked = rows.filter(function(r){ return r.talked; }).length;
+  var el = document.getElementById('contact-counter');
+  if (el) el.textContent = talked + '/' + rows.length;
+}
+
+function markTalked(i) {
+  rows[i].talked = true;
+  updateCounter();
+}
 
 function render() {
   var c = document.getElementById('rows-container');
@@ -576,9 +591,9 @@ function render() {
         ? '<span class="' + dc + '" style="font-family:\'DM Mono\',monospace;font-size:13px;">' + r.fudate + '</span>'
         : '<span style="color:var(--border)">&mdash;</span>';
       div.innerHTML =
-        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value"></div>' +
-        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value"></div>' +
-        '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value" style="font-family:\'DM Mono\',monospace;"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value;markTalked(' + i + ')"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value;markTalked(' + i + ')"></div>' +
+        '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value;markTalked(' + i + ')" style="font-family:\'DM Mono\',monospace;"></div>' +
         '<div class="cell" style="display:flex;align-items:center;">' + tpill + '</div>' +
         '<div class="cell" style="display:flex;align-items:center;">' + ddisp + '</div>' +
         '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.futime||'') + '</span></div>' +
@@ -595,6 +610,7 @@ function render() {
       c.appendChild(db);
     }
   });
+  updateCounter();
 }
 
 function addRow() {
@@ -628,7 +644,7 @@ function addFromFollowUp(event) {
         });
         if (isDup) return;
         rows.push({ address:r.address||'', name:r.name||'', phone:r.phone||'', temp:r.temp||'',
-          fudate:r.fudate||'', futime:r.futime||'', fumethod:r.fumethod||'', detail:r.detail||null });
+          fudate:r.fudate||'', futime:r.futime||'', fumethod:r.fumethod||'', detail:r.detail||null, talked:false });
         imported++;
       });
       var filled = rows.filter(function(r){ return r.address||r.name||r.phone||r.temp||r.detail; });
@@ -702,6 +718,7 @@ function saveDetail() {
     hook:document.getElementById('p-hook').value, stars:panelStarVal
   };
   rows[activeRowIdx].detail = d;
+  rows[activeRowIdx].talked = true;
   if (d.address) rows[activeRowIdx].address = d.address;
   if (d.phone)   rows[activeRowIdx].phone   = d.phone;
   var fn = [d.fname,d.lname].filter(Boolean).join(' '); if(fn) rows[activeRowIdx].name = fn;
@@ -760,6 +777,29 @@ function sortByDate() {
   render();
 }
 
+var addrSortDir = 'asc';
+function parseStreet(addr) {
+  var street = (addr||'').split(',')[0].trim();
+  var m = street.match(/^(\d+)\s+(.+)$/);
+  if (m) return { num: parseInt(m[1], 10), name: m[2].toLowerCase() };
+  return { num: 0, name: street.toLowerCase() };
+}
+function sortByAddress() {
+  var w = rows.filter(function(r){ return r.address||r.name||r.temp||r.detail; });
+  var e = rows.filter(function(r){ return !r.address&&!r.name&&!r.temp&&!r.detail; });
+  var dir = addrSortDir === 'asc' ? 1 : -1;
+  w.sort(function(a,b){
+    var pa = parseStreet(a.address), pb = parseStreet(b.address);
+    if (pa.name < pb.name) return -1 * dir;
+    if (pa.name > pb.name) return  1 * dir;
+    return (pa.num - pb.num) * dir;
+  });
+  rows = w.concat(e);
+  addrSortDir = addrSortDir === 'asc' ? 'desc' : 'asc';
+  document.getElementById('sort-addr-btn').textContent = dir === 1 ? '↑' : '↓';
+  render();
+}
+
 function saveSession() {
   var s = { date:document.getElementById('sess-date').value, rows:rows };
   var blob = new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
@@ -771,7 +811,7 @@ function loadSession(event) {
   var file = event.target.files[0]; if (!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    try { var s=JSON.parse(e.target.result); if(s.date) document.getElementById('sess-date').value=s.date; if(Array.isArray(s.rows)){rows=s.rows;render();} }
+    try { var s=JSON.parse(e.target.result); if(s.date) document.getElementById('sess-date').value=s.date; if(Array.isArray(s.rows)){rows=s.rows.map(function(r){return Object.assign({},r,{talked:false});});render();} }
     catch(err){ alert('Could not load file.'); }
     event.target.value='';
   };
@@ -793,7 +833,7 @@ function readDoorKnock(event) {
         var phone=d.phone||r.phone||'', temp=d.temp||r.temp||'', fudate=d.fudate||'';
         if (rows.some(function(x){ return x.address===address&&x.name===fullName; })) return;
         newLeads.push({ address:address, name:fullName, phone:phone, temp:temp, fudate:fudate,
-          futime:d.futime||'', fumethod:d.fumethod||'',
+          futime:d.futime||'', fumethod:d.fumethod||'', talked:false,
           detail:{ fname:d.fname||'',lname:d.lname||'',address:address,phone:phone,email:d.email||'',
             unit:d.unit||'',years:d.years||'',besttime:d.besttime||'',proptype:d.proptype||'',lang:d.lang||'',
             attitude:d.attitude||'',temp:temp,moving:d.moving||'',reason:d.reason||'',obj:d.obj||'',

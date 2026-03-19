@@ -270,6 +270,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <label>Date</label>
     <input type="date" id="sess-date">
   </div>
+  <div style="display:flex;align-items:center;gap:7px;">
+    <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
+    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+  </div>
   <div class="toolbar-btns">
     <button class="btn btn-outline" onclick="addRow()">+ Row</button>
     <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
@@ -472,7 +476,7 @@ var SIGNAL_LABELS = [
   'Owns other properties','Recently renovated','Mentioned a neighbour selling'
 ];
 
-function makeRow() { return { address:'', name:'', phone:'', temp:'', fudate:'', futime:'', fumethod:'', detail:null }; }
+function makeRow() { return { address:'', name:'', phone:'', temp:'', fudate:'', futime:'', fumethod:'', detail:null, talked:false }; }
 
 function formatPhone(input) {
   var d = input.value.replace(/\D/g,'').slice(0,10), out = '';
@@ -528,6 +532,17 @@ function splitName(name) {
 
 var mobileMediaQuery = window.matchMedia('(max-width: 500px)');
 function isMobile() { return mobileMediaQuery.matches; }
+
+function updateCounter() {
+  var talked = rows.filter(function(r){ return r.talked; }).length;
+  var el = document.getElementById('contact-counter');
+  if (el) el.textContent = talked + '/' + rows.length;
+}
+
+function markTalked(i) {
+  rows[i].talked = true;
+  updateCounter();
+}
 
 function render() {
   var c = document.getElementById('rows-container');
@@ -594,9 +609,9 @@ function render() {
         ? '<span class="' + dc + '" style="font-family:\'DM Mono\',monospace;font-size:13px;">' + r.fudate + '</span>'
         : '<span style="color:var(--border)">&mdash;</span>';
       div.innerHTML =
-        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value"></div>' +
-        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value"></div>' +
-        '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value" style="font-family:\'DM Mono\',monospace;"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value;markTalked(' + i + ')"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value;markTalked(' + i + ')"></div>' +
+        '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value;markTalked(' + i + ')" style="font-family:\'DM Mono\',monospace;"></div>' +
         '<div class="cell" style="display:flex;align-items:center;">' + tpill + '</div>' +
         '<div class="cell" style="display:flex;align-items:center;">' + ddisp + '</div>' +
         '<div class="cell" style="display:flex;align-items:center;"><span style="font-size:12px;color:var(--text);">' + esc(r.futime||'') + '</span></div>' +
@@ -614,6 +629,7 @@ function render() {
       c.appendChild(db);
     }
   });
+  updateCounter();
 }
 
 function addRow() {
@@ -656,7 +672,8 @@ function addFromFollowUp(event) {
           futime:    r.futime    || '',
           fumethod:  r.fumethod  || '',
           detail:    r.detail    || null,
-          propDetail:r.propDetail|| null
+          propDetail:r.propDetail|| null,
+          talked:    false
         });
         imported++;
       });
@@ -734,6 +751,7 @@ function saveDetail() {
     hook:document.getElementById('p-hook').value, stars:panelStarVal
   };
   rows[activeRowIdx].detail = d;
+  rows[activeRowIdx].talked = true;
   if (d.address) rows[activeRowIdx].address = d.address;
   if (d.phone)   rows[activeRowIdx].phone   = d.phone;
   var fn = [d.fname,d.lname].filter(Boolean).join(' '); if(fn) rows[activeRowIdx].name = fn;
@@ -907,7 +925,7 @@ function loadSession(event) {
   var file = event.target.files[0]; if (!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    try { var s=JSON.parse(e.target.result); if(s.date) document.getElementById('sess-date').value=s.date; if(Array.isArray(s.rows)){rows=s.rows;render();} }
+    try { var s=JSON.parse(e.target.result); if(s.date) document.getElementById('sess-date').value=s.date; if(Array.isArray(s.rows)){rows=s.rows.map(function(r){return Object.assign({},r,{talked:false});});render();} }
     catch(err){ alert('Could not load file.'); }
     event.target.value='';
   };

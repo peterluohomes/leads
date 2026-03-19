@@ -610,6 +610,10 @@ body {
     <label>Street</label>
     <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave">
   </div>
+  <div style="display:flex;align-items:center;gap:7px;">
+    <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
+    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+  </div>
   <div class="toolbar-btns">
     <button class="btn btn-outline" onclick="addRow()">+ Row</button>
     <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
@@ -835,7 +839,8 @@ const GENDERS = ['—','Male','Female','Couple','Other'];
 function makeRow() {
   return {
     stnum:'', race:'', gender:'', age:'', temp:'', note:'', lastknock:'',
-    detail: null   // null means no detail yet
+    detail: null,  // null means no detail yet
+    talked: false  // true only when changed in current session
   };
 }
 
@@ -935,6 +940,16 @@ function stampKnock(i) {
   }
 }
 
+function updateCounter() {
+  const talked = rows.filter(r => r.talked).length;
+  document.getElementById('contact-counter').textContent = talked + '/' + rows.length;
+}
+
+function markTalked(i) {
+  rows[i].talked = true;
+  updateCounter();
+}
+
 function render() {
   const c = document.getElementById('rows-container');
   c.innerHTML = '';
@@ -943,23 +958,23 @@ function render() {
     div.className = 'door-row';
     div.innerHTML = `
       <div class="cell">
-        <input class="stnum" type="text" value="${r.stnum}" placeholder="" pattern="[0-9]+[A-Ka-k]?" oninput="this.value=this.value.replace(/[^0-9A-Ka-k]/g,'').replace(/([A-Ka-k]).*$/,'$1');rows[${i}].stnum=this.value" style="font-family:'DM Mono',monospace;width:100%;text-transform:uppercase;">
+        <input class="stnum" type="text" value="${r.stnum}" placeholder="" pattern="[0-9]+[A-Ka-k]?" oninput="this.value=this.value.replace(/[^0-9A-Ka-k]/g,'').replace(/([A-Ka-k]).*$/,'$1');rows[${i}].stnum=this.value;markTalked(${i})" style="font-family:'DM Mono',monospace;width:100%;text-transform:uppercase;">
       </div>
       <div class="cell">
-        <select onchange="rows[${i}].race=this.value;stampKnock(${i})">
+        <select onchange="rows[${i}].race=this.value;stampKnock(${i});markTalked(${i})">
           ${RACES.map(x=>`<option${r.race===x?' selected':''}>${x}</option>`).join('')}
         </select>
       </div>
       <div class="cell">
-        <select onchange="rows[${i}].gender=this.value;stampKnock(${i})">
+        <select onchange="rows[${i}].gender=this.value;stampKnock(${i});markTalked(${i})">
           ${GENDERS.map(x=>`<option${r.gender===x?' selected':''}>${x}</option>`).join('')}
         </select>
       </div>
       <div class="cell">
-        <input type="number" value="${r.age}" min="20" max="99" placeholder="" oninput="rows[${i}].age=this.value;stampKnock(${i})">
+        <input type="number" value="${r.age}" min="20" max="99" placeholder="" oninput="rows[${i}].age=this.value;stampKnock(${i});markTalked(${i})">
       </div>
       <div class="cell">
-        <select onchange="rows[${i}].temp=this.value">
+        <select onchange="rows[${i}].temp=this.value;markTalked(${i})">
           <option value="">—</option>
           <option value="hot"${r.temp==='hot'?' selected':''}>🔥 Hot</option>
           <option value="warm"${r.temp==='warm'?' selected':''}>🟡 Warm</option>
@@ -972,7 +987,7 @@ function render() {
         <input type="text" value="${r.lastknock||''}" placeholder="YY.MM.DD" maxlength="8" style="font-family:'DM Mono',monospace;font-size:12px;" oninput="rows[${i}].lastknock=this.value">
       </div>
       <div class="cell cell-note">
-        <input type="text" value="${r.note||''}" placeholder="Quick note…" oninput="rows[${i}].note=this.value;stampKnock(${i})">
+        <input type="text" value="${r.note||''}" placeholder="Quick note…" oninput="rows[${i}].note=this.value;stampKnock(${i});markTalked(${i})">
       </div>
       <div class="cell">
         <button class="expand-btn${r.detail?' has-data':''}" onclick="openPanel(${i})" title="${r.detail?'Edit detail':'Add detail'}">
@@ -990,6 +1005,8 @@ function render() {
       c.appendChild(db);
     }
   });
+
+  updateCounter();
 }
 
 function addRow() {
@@ -1094,6 +1111,7 @@ function saveDetail() {
     stars: panelStarVal,
   };
   rows[activeRowIdx].detail = d;
+  rows[activeRowIdx].talked = true;
   // also sync temp back to row
   if (panelTemp) rows[activeRowIdx].temp = panelTemp;
   closePanel();
@@ -1157,7 +1175,7 @@ function loadSession(event) {
       if (session.weather) document.getElementById('sess-weather').value = session.weather;
       if (session.tempC)   document.getElementById('sess-temp').value    = session.tempC;
       if (Array.isArray(session.rows)) {
-        rows = session.rows.map(r => { const {sffx, ...rest} = r; return rest; });
+        rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest, talked: false}; });
         render();
       }
     } catch(err) {
