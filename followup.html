@@ -134,7 +134,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .print-detail { display: none; }
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .toolbar-btns, .expand-btn, .remove-btn, .add-row-bar, .panel-overlay, .detail-panel, .page-footer, .sort-btn { display: none !important; }
+  .toolbar-btns, .expand-btn, .remove-btn, .add-row-bar, .panel-overlay, .detail-panel, .page-footer, .sort-btn, #autosave-status { display: none !important; }
   body { background: white; font-size: 11px; }
   .lead-row { min-height: 26px; padding: 3px 10px 3px 14px; }
   .cell input { font-size: 11px; padding: 2px 3px; }
@@ -262,14 +262,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <div class="session-bar">
   <div class="session-field">
     <label>Date</label>
-    <input type="date" id="sess-date">
+    <input type="date" id="sess-date" onchange="scheduleSave()">
   </div>
   <div style="display:flex;align-items:center;gap:7px;">
     <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
     <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
   </div>
   <div class="toolbar-btns">
+    <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
     <button class="btn btn-outline" onclick="addRow()">+ Row</button>
+    <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
     <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
     <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
     <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
@@ -461,6 +463,129 @@ var SIGNAL_LABELS = [
 
 function makeRow() { return { address:'', name:'', phone:'', temp:'', fudate:'', futime:'', fumethod:'', detail:null, talked:false }; }
 
+// ─────────────────────────────────────────
+// INDEXEDDB PERSISTENCE LAYER
+// ─────────────────────────────────────────
+var DB_NAME = 'PinnacleFollowUp';
+var DB_VERSION = 1;
+var STORE_NAME = 'sessions';
+var SESSION_KEY = 'current';
+var db = null;
+var saveTimer = null;
+
+function openDB() {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = function(e) {
+      var database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME);
+      }
+    };
+    req.onsuccess = function(e) {
+      db = e.target.result;
+      db.onclose = function() { db = null; };
+      resolve(db);
+    };
+    req.onerror = function(e) {
+      console.warn('IndexedDB open failed:', e.target.error);
+      reject(e.target.error);
+    };
+  });
+}
+
+function ensureDB() {
+  if (db) return Promise.resolve(true);
+  return openDB().then(function() { return true; }).catch(function() { return false; });
+}
+
+function getSessionData() {
+  return {
+    date: document.getElementById('sess-date').value,
+    rows: rows,
+    savedAt: new Date().toISOString()
+  };
+}
+
+function persistSession() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  return ensureDB().then(function(ok) {
+    if (!ok) return;
+    var tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(getSessionData(), SESSION_KEY);
+    return new Promise(function(res) { tx.oncomplete = function() { flashSaveIndicator(); res(); }; tx.onerror = function() { res(); }; });
+  }).catch(function(err) { console.warn('Auto-save failed:', err); });
+}
+
+function persistSessionSync() {
+  if (!db) return;
+  try {
+    var tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(getSessionData(), SESSION_KEY);
+  } catch(err) { console.warn('Sync save failed:', err); }
+}
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(persistSession, 500);
+}
+
+function flashSaveIndicator() {
+  var el = document.getElementById('autosave-status');
+  if (!el) return;
+  el.textContent = '✓ saved';
+  el.style.opacity = '1';
+  setTimeout(function() { el.style.opacity = '0.4'; }, 1200);
+}
+
+window.addEventListener('beforeunload', function() {
+  if (saveTimer) clearTimeout(saveTimer);
+  persistSessionSync();
+});
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    if (saveTimer) clearTimeout(saveTimer);
+    persistSessionSync();
+  }
+});
+window.addEventListener('pagehide', function() {
+  if (saveTimer) clearTimeout(saveTimer);
+  persistSessionSync();
+});
+
+function loadFromDB() {
+  return ensureDB().then(function(ok) {
+    if (!ok) return false;
+    var tx = db.transaction(STORE_NAME, 'readonly');
+    var store = tx.objectStore(STORE_NAME);
+    var req = store.get(SESSION_KEY);
+    return new Promise(function(resolve) {
+      req.onsuccess = function() {
+        var session = req.result;
+        if (!session || !Array.isArray(session.rows) || session.rows.length === 0) { resolve(false); return; }
+        if (session.date) document.getElementById('sess-date').value = session.date;
+        rows = session.rows.map(function(r) { return Object.assign({}, r); });
+        render();
+        resolve(true);
+      };
+      req.onerror = function() { resolve(false); };
+    });
+  }).catch(function() { return false; });
+}
+
+function newSession() {
+  if (!confirm('Start a new session?\n\nTip: Use 💾 Save to export a JSON backup first.')) return;
+  rows = [];
+  for (var i = 0; i < 10; i++) rows.push(makeRow());
+  var now = new Date();
+  document.getElementById('sess-date').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  render();
+  persistSession();
+}
+
+// ─────────────────────────────────────────
+// UTILITY FUNCTIONS
+// ─────────────────────────────────────────
 function formatPhone(input) {
   var d = input.value.replace(/\D/g,'').slice(0,10), out = '';
   if (d.length > 0) out = '(' + d.slice(0,3);
@@ -483,11 +608,9 @@ function getTempOrder(t) { return (t && TEMP_ORDER[t] !== undefined) ? TEMP_ORDE
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function splitAddress(addr) {
-  // Split address into two lines: street number+name on line 1, city/province on line 2
   if (!addr) return ['',''];
   var comma = addr.indexOf(',');
   if (comma > 0) return [addr.slice(0,comma).trim(), addr.slice(comma+1).trim()];
-  // Try splitting at last space if single word
   var parts = addr.trim().split(/\s+/);
   if (parts.length <= 3) return [addr, ''];
   var mid = Math.ceil(parts.length / 2);
@@ -495,7 +618,6 @@ function splitAddress(addr) {
 }
 
 function splitPhone(ph) {
-  // (416)555-1234 → top:(416)555  bot:-1234
   if (!ph) return ['',''];
   var m = ph.match(/^(\(\d{3}\))(\d{3})(-\d{4})?$/);
   if (m) return [m[1]+(m[2]||''), m[3]||''];
@@ -503,7 +625,6 @@ function splitPhone(ph) {
 }
 
 function splitName(name) {
-  // "Last, First" or "First Last" → [last, first]
   if (!name) return ['',''];
   if (name.indexOf(',') > 0) {
     var p = name.split(','); return [p[0].trim(), p[1].trim()];
@@ -525,8 +646,12 @@ function updateCounter() {
 function markTalked(i) {
   rows[i].talked = true;
   updateCounter();
+  scheduleSave();
 }
 
+// ─────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────
 function render() {
   var c = document.getElementById('rows-container');
   c.innerHTML = '';
@@ -551,35 +676,29 @@ function render() {
         : '<span style="color:var(--border)">—</span>';
       var mdisp = r.fumethod ? esc(r.fumethod) : '—';
 
-      // Cell 1: Address stacked
       var addrCell = '<div class="cell">' +
         '<div class="mob-addr-top">' + (esc(addrParts[0])||'<span style="color:var(--border)">Address</span>') + '</div>' +
         (addrParts[1] ? '<div class="mob-addr-bot">' + esc(addrParts[1]) + '</div>' : '<div class="mob-addr-bot" style="color:var(--border)">—</div>') +
         '</div>';
 
-      // Cell 2: Name stacked last / first
       var nameCell = '<div class="cell">' +
         '<div class="mob-last">' + (esc(nameParts[0])||'<span style="color:var(--border)">Last</span>') + '</div>' +
         '<div class="mob-first">' + (esc(nameParts[1])||'<span style="color:var(--border)">First</span>') + '</div>' +
         '</div>';
 
-      // Cell 3: Phone stacked (###)### / -####
       var phoneCell = '<div class="cell">' +
         '<div class="mob-phone-top">' + (esc(phoneParts[0])||'<span style="color:var(--border)">Phone</span>') + '</div>' +
         '<div class="mob-phone-bot">' + (esc(phoneParts[1])||'<span style="color:var(--border)">—</span>') + '</div>' +
         '</div>';
 
-      // Cell 4: Temp pill row1 + date/time/method stacked
       var tempDateCell = '<div class="cell" style="grid-column:4;grid-row:1;display:flex;align-items:center;justify-content:center;">' + tpill + '</div>' +
         '<div class="mob-date-time" style="grid-column:4;grid-row:2;">' +
           ddisp + tdisp +
           '<div class="mob-method-line">' + mdisp + '</div>' +
         '</div>';
 
-      // Placeholder cells 5,6,7 (hidden by CSS)
       var hidden = '<div class="cell"></div><div class="cell"></div><div class="cell"></div>';
 
-      // Cell 8: expand btn, Cell 9: remove btn — both placed in col 5 by nth-child CSS
       var btnCell =
         '<div class="cell"><button class="expand-btn' + (r.detail?' has-data':'') + '" onclick="openPanel(' + i + ')">' + (r.detail?'&#9998;':'+') + '</button></div>' +
         '<div class="cell"><button class="remove-btn" onclick="removeRow(' + i + ')" title="Remove">&#8722;</button></div>';
@@ -614,7 +733,7 @@ function render() {
 }
 
 function addRow() {
-  rows.push(makeRow()); render();
+  rows.push(makeRow()); render(); scheduleSave();
   setTimeout(function(){ var c=document.getElementById('rows-container'); if(c.lastElementChild) c.lastElementChild.scrollIntoView({behavior:'smooth'}); },50);
 }
 
@@ -626,7 +745,7 @@ function removeRow(idx) {
     if (!confirm('Remove "' + label + '"?')) return;
   }
   rows.splice(idx, 1);
-  render();
+  render(); scheduleSave();
 }
 
 function addFromFollowUp(event) {
@@ -654,12 +773,15 @@ function addFromFollowUp(event) {
         ? 'No new records added (all duplicates or empty).'
         : '✅ ' + imported + ' record' + (imported > 1 ? 's' : '') + ' appended.';
       event.target.value = '';
-      setTimeout(function() { render(); alert(msg); }, 0);
+      setTimeout(function() { render(); persistSession(); alert(msg); }, 0);
     } catch(err) { alert('Could not read file.'); event.target.value = ''; }
   };
   reader.readAsText(file);
 }
 
+// ─────────────────────────────────────────
+// PANEL
+// ─────────────────────────────────────────
 function openPanel(idx) {
   activeRowIdx = idx;
   var r = rows[idx], d = r.detail || {};
@@ -726,9 +848,12 @@ function saveDetail() {
   if (d.fudate)  rows[activeRowIdx].fudate   = d.fudate;
   if (d.futime)  rows[activeRowIdx].futime   = d.futime;
   if (d.fumethod)rows[activeRowIdx].fumethod = d.fumethod;
-  closePanel(); render();
+  closePanel(); render(); persistSession();
 }
 
+// ─────────────────────────────────────────
+// PRINT DETAIL
+// ─────────────────────────────────────────
 function buildDetailBlock(r) {
   var d = r.detail; if (!d) return '';
   var name = [d.fname,d.lname].filter(Boolean).join(' ') || '—';
@@ -753,6 +878,9 @@ function buildDetailBlock(r) {
     '</div>';
 }
 
+// ─────────────────────────────────────────
+// SORT
+// ─────────────────────────────────────────
 function sortByTemp() {
   var w = rows.filter(function(r){ return r.address||r.name||r.temp||r.detail; });
   var e = rows.filter(function(r){ return !r.address&&!r.name&&!r.temp&&!r.detail; });
@@ -760,7 +888,7 @@ function sortByTemp() {
   rows = w.concat(e);
   tempSortDir = tempSortDir==='desc'?'asc':'desc';
   document.getElementById('sort-temp-btn').textContent = tempSortDir==='asc'?'↓':'↑';
-  render();
+  render(); scheduleSave();
 }
 
 function sortByDate() {
@@ -774,7 +902,7 @@ function sortByDate() {
   rows = w.concat(e);
   dateSortDir = dateSortDir==='desc'?'asc':'desc';
   document.getElementById('sort-date-btn').textContent = dateSortDir==='asc'?'↓':'↑';
-  render();
+  render(); scheduleSave();
 }
 
 var addrSortDir = 'asc';
@@ -797,9 +925,12 @@ function sortByAddress() {
   rows = w.concat(e);
   addrSortDir = addrSortDir === 'asc' ? 'desc' : 'asc';
   document.getElementById('sort-addr-btn').textContent = dir === 1 ? '↑' : '↓';
-  render();
+  render(); scheduleSave();
 }
 
+// ─────────────────────────────────────────
+// SAVE / LOAD JSON (manual export)
+// ─────────────────────────────────────────
 function saveSession() {
   var s = { date:document.getElementById('sess-date').value, rows:rows };
   var blob = new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
@@ -811,7 +942,7 @@ function loadSession(event) {
   var file = event.target.files[0]; if (!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    try { var s=JSON.parse(e.target.result); if(s.date) document.getElementById('sess-date').value=s.date; if(Array.isArray(s.rows)){rows=s.rows.map(function(r){return Object.assign({},r,{talked:false});});render();} }
+    try { var s=JSON.parse(e.target.result); if(s.date) document.getElementById('sess-date').value=s.date; if(Array.isArray(s.rows)){rows=s.rows.map(function(r){return Object.assign({},r,{talked:false});});render();persistSession();} }
     catch(err){ alert('Could not load file.'); }
     event.target.value='';
   };
@@ -847,7 +978,7 @@ function readDoorKnock(event) {
         if(ei>=0) rows[ei]=lead; else rows.push(lead);
         imported++;
       });
-      render();
+      render(); persistSession();
       alert(imported===0 ? 'No new leads imported.' : '✅ '+imported+' lead'+(imported>1?'s':'')+' imported.');
     } catch(err){ alert('Could not read file.'); }
     event.target.value='';
@@ -855,11 +986,21 @@ function readDoorKnock(event) {
   reader.readAsText(file);
 }
 
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
 (function(){
   var now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0');
   document.getElementById('sess-date').value = y+'-'+m+'-'+d;
-  for(var i=0;i<10;i++) rows.push(makeRow());
-  render();
+
+  // Try loading from IndexedDB, fall back to blank rows
+  loadFromDB().then(function(restored) {
+    if (!restored) {
+      for(var i=0;i<10;i++) rows.push(makeRow());
+      render();
+    }
+  });
+
   var resizeTimer;
   window.addEventListener('resize', function(){ clearTimeout(resizeTimer); resizeTimer=setTimeout(render,150); });
 })();
