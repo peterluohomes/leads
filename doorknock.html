@@ -373,7 +373,7 @@ body {
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .toolbar-btns, .expand-btn, .add-row-bar, .panel-overlay, .detail-panel,
-  .page-footer, #rec-btn, #rec-timer { display: none !important; }
+  .page-footer, #rec-btn, #rec-timer, #autosave-status { display: none !important; }
   .page-header, .session-bar, .col-headers { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { background: white; font-size: 11px; }
 
@@ -575,7 +575,7 @@ body {
   <div class="header-right" style="display:flex;align-items:center;gap:16px;">
     <div style="display:flex;align-items:center;gap:7px;">
       <div style="font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Weather</div>
-      <select id="sess-weather" style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 9px;outline:none;">
+      <select id="sess-weather" onchange="scheduleSave()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 9px;outline:none;">
         <option value="">—</option>
         <option>☀️ Sunny</option>
         <option>⛅ Partly Cloudy</option>
@@ -587,7 +587,7 @@ body {
     </div>
     <div style="display:flex;align-items:center;gap:7px;">
       <div style="font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Temp °C</div>
-      <input type="number" id="sess-temp" style="width:64px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Mono',monospace;font-size:13px;padding:5px 9px;outline:none;text-align:center;" placeholder="18">
+      <input type="number" id="sess-temp" oninput="scheduleSave()" style="width:64px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Mono',monospace;font-size:13px;padding:5px 9px;outline:none;text-align:center;" placeholder="18">
     </div>
   </div>
 </div>
@@ -596,26 +596,28 @@ body {
 <div class="session-bar">
   <div class="session-field">
     <label>Date</label>
-    <input type="date" id="sess-date">
+    <input type="date" id="sess-date" onchange="scheduleSave()">
   </div>
   <div class="session-field">
     <label>Start</label>
-    <input type="time" id="sess-start">
+    <input type="time" id="sess-start" onchange="scheduleSave()">
   </div>
   <div class="session-field">
     <label>End</label>
-    <input type="time" id="sess-end">
+    <input type="time" id="sess-end" onchange="scheduleSave()">
   </div>
   <div class="session-field">
     <label>Street</label>
-    <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave">
+    <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="scheduleSave()">
   </div>
   <div style="display:flex;align-items:center;gap:7px;">
     <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
     <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
   </div>
   <div class="toolbar-btns">
+    <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
     <button class="btn btn-outline" onclick="addRow()">+ Row</button>
+    <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
     <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
     <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
     <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
@@ -836,6 +838,216 @@ let sortDir = 0; // 0 = unsorted, 1 = asc, -1 = desc
 const RACES = ['—','Chinese','South Asian','East Asian','Caucasian','Black','Hispanic','Middle Eastern','Other'];
 const GENDERS = ['—','Male','Female','Couple','Other'];
 
+// ─────────────────────────────────────────
+// INDEXEDDB PERSISTENCE LAYER
+// ─────────────────────────────────────────
+const DB_NAME = 'PinnacleDoorKnock';
+const DB_VERSION = 1;
+const STORE_NAME = 'sessions';
+const SESSION_KEY = 'current';
+let db = null;
+let dbReady = false;
+let saveTimer = null;
+let savePending = false; // tracks whether unsaved changes exist
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME);
+      }
+    };
+    req.onsuccess = (e) => {
+      db = e.target.result;
+      dbReady = true;
+      // Handle connection loss (iOS Safari can close it)
+      db.onclose = () => { dbReady = false; db = null; };
+      resolve(db);
+    };
+    req.onerror = (e) => {
+      console.warn('IndexedDB open failed:', e.target.error);
+      reject(e.target.error);
+    };
+  });
+}
+
+// Re-open DB if connection was lost
+async function ensureDB() {
+  if (dbReady && db) return true;
+  try {
+    await openDB();
+    return true;
+  } catch(err) {
+    console.warn('Could not re-open IndexedDB:', err);
+    return false;
+  }
+}
+
+function dbPut(key, value) {
+  return new Promise(async (resolve) => {
+    if (!(await ensureDB())) { resolve(); return; }
+    try {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => { console.warn('DB put error:', e.target.error); resolve(); };
+    } catch(err) { console.warn('DB put exception:', err); resolve(); }
+  });
+}
+
+function dbGet(key) {
+  return new Promise(async (resolve) => {
+    if (!(await ensureDB())) { resolve(null); return; }
+    try {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = (e) => { console.warn('DB get error:', e.target.error); resolve(null); };
+    } catch(err) { console.warn('DB get exception:', err); resolve(null); }
+  });
+}
+
+function dbDelete(key) {
+  return new Promise(async (resolve) => {
+    if (!(await ensureDB())) { resolve(); return; }
+    try {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => { console.warn('DB delete error:', e.target.error); resolve(); };
+    } catch(err) { console.warn('DB delete exception:', err); resolve(); }
+  });
+}
+
+// Debounced auto-save — triggers 600ms after last change
+// BUT: critical moments (beforeunload, visibilitychange) flush immediately
+function scheduleSave() {
+  savePending = true;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { persistSession(); }, 600);
+}
+
+// Immediate synchronous-ish save for page close scenarios
+function flushSaveSync() {
+  if (!savePending) return;
+  if (!dbReady || !db) return;
+  try {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put(getSessionData(), SESSION_KEY);
+    // We can't await here, but the transaction is queued
+    savePending = false;
+  } catch(err) {
+    console.warn('Sync flush failed:', err);
+  }
+}
+
+function getSessionData() {
+  const cleanRows = rows.map(r => {
+    const {sffx, ...rest} = r;
+    return rest;
+  });
+  return {
+    date: document.getElementById('sess-date').value,
+    start: document.getElementById('sess-start').value,
+    end: document.getElementById('sess-end').value,
+    street: document.getElementById('sess-street').value,
+    weather: document.getElementById('sess-weather').value,
+    tempC: document.getElementById('sess-temp').value,
+    rows: cleanRows,
+    savedAt: new Date().toISOString()
+  };
+}
+
+async function persistSession() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  try {
+    await dbPut(SESSION_KEY, getSessionData());
+    savePending = false;
+    flashSaveIndicator();
+  } catch(err) {
+    console.warn('Auto-save failed:', err);
+  }
+}
+
+function flashSaveIndicator() {
+  const el = document.getElementById('autosave-status');
+  if (!el) return;
+  el.textContent = '✓ saved';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0.4'; }, 1200);
+}
+
+// ── CRITICAL: Save when user leaves the page ──
+window.addEventListener('beforeunload', () => {
+  if (saveTimer) clearTimeout(saveTimer);
+  flushSaveSync();
+});
+
+// ── Save when tab goes to background (iOS Safari closes tabs aggressively) ──
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    if (saveTimer) clearTimeout(saveTimer);
+    flushSaveSync();
+  }
+});
+
+// ── Also save on pagehide (iOS Safari more reliable than beforeunload) ──
+window.addEventListener('pagehide', () => {
+  if (saveTimer) clearTimeout(saveTimer);
+  flushSaveSync();
+});
+
+async function loadFromDB() {
+  try {
+    const session = await dbGet(SESSION_KEY);
+    if (!session || !Array.isArray(session.rows) || session.rows.length === 0) return false;
+
+    if (session.date)    document.getElementById('sess-date').value    = session.date;
+    if (session.start)   document.getElementById('sess-start').value   = session.start;
+    if (session.end)     document.getElementById('sess-end').value     = session.end;
+    if (session.street)  document.getElementById('sess-street').value  = session.street;
+    if (session.weather) document.getElementById('sess-weather').value = session.weather;
+    if (session.tempC)   document.getElementById('sess-temp').value    = session.tempC;
+
+    rows = session.rows.map(r => {
+      const {sffx, ...rest} = r;
+      return {...rest};
+    });
+    render();
+    return true;
+  } catch(err) {
+    console.warn('Load from IndexedDB failed:', err);
+    return false;
+  }
+}
+
+function newSession() {
+  if (!confirm('Start a new session? Current data is auto-saved in the browser.\n\nTip: Use 💾 Save to export a JSON backup first if needed.')) return;
+  rows = [];
+  for (let i = 0; i < 10; i++) rows.push(makeRow());
+  // reset meta fields
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+  document.getElementById('sess-date').value = `${y}-${m}-${d}`;
+  const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('sess-start').value = `${hh}:${mm}`;
+  document.getElementById('sess-end').value = '';
+  document.getElementById('sess-street').value = '';
+  document.getElementById('sess-weather').value = '';
+  document.getElementById('sess-temp').value = '';
+  sortDir = 0;
+  document.getElementById('sort-icon').textContent = '⇅';
+  document.getElementById('sort-icon').style.opacity = '0.6';
+  render();
+  persistSession();
+}
+
 function makeRow() {
   return {
     stnum:'', race:'', gender:'', age:'', temp:'', note:'', lastknock:'',
@@ -922,6 +1134,7 @@ function sortByStreetNum() {
   icon.textContent = sortDir === 1 ? '↑' : '↓';
   icon.style.opacity = '1';
   render();
+  scheduleSave();
 }
 
 
@@ -938,6 +1151,7 @@ function stampKnock(i) {
     const lkInput = cells[i].querySelectorAll('.cell input[placeholder="YY.MM.DD"]')[0];
     if (lkInput) lkInput.value = stamp;
   }
+  scheduleSave();
 }
 
 function updateCounter() {
@@ -948,6 +1162,7 @@ function updateCounter() {
 function markTalked(i) {
   rows[i].talked = true;
   updateCounter();
+  scheduleSave();
 }
 
 function render() {
@@ -984,7 +1199,7 @@ function render() {
         </select>
       </div>
       <div class="cell">
-        <input type="text" value="${r.lastknock||''}" placeholder="YY.MM.DD" maxlength="8" style="font-family:'DM Mono',monospace;font-size:12px;" oninput="rows[${i}].lastknock=this.value">
+        <input type="text" value="${r.lastknock||''}" placeholder="YY.MM.DD" maxlength="8" style="font-family:'DM Mono',monospace;font-size:12px;" oninput="rows[${i}].lastknock=this.value;scheduleSave()">
       </div>
       <div class="cell cell-note">
         <input type="text" value="${r.note||''}" placeholder="Quick note…" oninput="rows[${i}].note=this.value;stampKnock(${i});markTalked(${i})">
@@ -1012,6 +1227,7 @@ function render() {
 function addRow() {
   rows.push(makeRow());
   render();
+  scheduleSave();
   // scroll to bottom
   setTimeout(()=>{ const c=document.getElementById('rows-container'); c.lastElementChild && c.lastElementChild.scrollIntoView({behavior:'smooth'}); },50);
 }
@@ -1116,6 +1332,7 @@ function saveDetail() {
   if (panelTemp) rows[activeRowIdx].temp = panelTemp;
   closePanel();
   render();
+  scheduleSave();
 }
 
 // ─────────────────────────────────────────
@@ -1134,19 +1351,9 @@ function formatPhone(input) {
 // SAVE SESSION JSON
 // ─────────────────────────────────────────
 function saveSession() {
-  const cleanRows = rows.map(r => {
-    const {sffx, ...rest} = r;
-    return rest;
-  });
-  const session = {
-    date: document.getElementById('sess-date').value,
-    start: document.getElementById('sess-start').value,
-    end: document.getElementById('sess-end').value,
-    street: document.getElementById('sess-street').value,
-    weather: document.getElementById('sess-weather').value,
-    tempC: document.getElementById('sess-temp').value,
-    rows: cleanRows
-  };
+  const session = getSessionData();
+  // remove internal savedAt field from export
+  delete session.savedAt;
   const blob = new Blob([JSON.stringify(session, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1177,6 +1384,7 @@ function loadSession(event) {
       if (Array.isArray(session.rows)) {
         rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest, talked: false}; });
         render();
+        persistSession(); // save loaded data into IndexedDB
       }
     } catch(err) {
       alert('Could not load file. Please make sure it is a valid session JSON.');
@@ -1187,19 +1395,30 @@ function loadSession(event) {
 }
 
 // ─────────────────────────────────────────
-// INIT
+// INIT — IndexedDB-aware
 // ─────────────────────────────────────────
-(function init() {
-  // Set defaults
+(async function init() {
+  // Set defaults first
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
   document.getElementById('sess-date').value = `${y}-${m}-${d}`;
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('sess-start').value = `${hh}:${mm}`;
 
-  // Start with 10 blank rows
-  for (let i=0; i<10; i++) rows.push(makeRow());
-  render();
+  // Try to open IndexedDB and restore previous session
+  let restored = false;
+  try {
+    await openDB();
+    restored = await loadFromDB();
+  } catch(err) {
+    console.warn('IndexedDB not available, using in-memory only:', err);
+  }
+
+  // If no saved session, start with 10 blank rows
+  if (!restored) {
+    for (let i = 0; i < 10; i++) rows.push(makeRow());
+    render();
+  }
 })();
 
 // ─────────────────────────────────────────
