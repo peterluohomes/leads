@@ -123,6 +123,7 @@ body {
 .session-field input[type="date"] { min-width: 140px; }
 .session-field input[type="time"] { min-width: 100px; }
 .session-field input.street { min-width: 180px; }
+.sess-row { display: flex; align-items: center; gap: 14px; }
 
 .toolbar-btns { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .btn {
@@ -521,19 +522,35 @@ body {
     letter-spacing: 0.3px;
   }
   .reminder span { font-size: 9px; margin-top: 1px; }
-  .hdr-controls { gap: 6px; flex-shrink: 0; }
-  .hdr-controls #rec-btn { padding: 5px 10px !important; font-size: 11px !important; }
-  .weather-group select { font-size: 11px; padding: 4px 6px; }
-  .weather-group input { width: 48px !important; font-size: 12px !important; padding: 4px 4px !important; }
+  .hdr-controls { gap: 4px; flex-shrink: 0; }
+  .hdr-controls #rec-btn { padding: 4px 8px !important; font-size: 10px !important; }
+  .weather-group select { font-size: 10px; padding: 3px 4px; max-width: 72px; }
+  .weather-group input { width: 38px !important; font-size: 11px !important; padding: 3px 2px !important; }
   .header-right { width: 100%; justify-content: flex-end; }
 
-  /* session bar stacks into 2 rows */
-  .session-bar { padding: 8px 12px; gap: 8px; }
-  .session-field { flex: 1 1 auto; min-width: 130px; }
-  .session-field input, .session-field select { font-size: 14px; width: 100%; }
-  .session-field input.street { min-width: unset; width: 100%; }
-  .toolbar-btns { width: 100%; justify-content: flex-end; margin-left: 0; }
-  .btn { font-size: 12px; padding: 9px 12px; }
+  /* session bar: 3 clean rows */
+  .session-bar { padding: 6px 10px; gap: 5px; flex-direction: column; }
+  .sess-row { width: 100%; gap: 6px; }
+
+  /* Row 1: Date + Start + End on one line */
+  .sess-row-1 { display: flex; }
+  .sess-row-1 .session-field { flex: 1; min-width: 0; }
+  .sess-row-1 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
+  .sess-row-1 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 4px; }
+
+  /* Row 2: Street + Talked/Total on one line */
+  .sess-row-2 { display: flex; }
+  .sess-row-2 .session-field { min-width: 0; }
+  .sess-row-2 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
+  .sess-row-2 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 6px; }
+  .sess-row-2 .sess-counter { flex-shrink: 0; }
+  .sess-row-2 .sess-counter label { font-size: 9px; }
+  .sess-row-2 #contact-counter { font-size: 15px; padding: 5px 8px; min-height: 36px; }
+
+  /* Row 3: toolbar buttons */
+  .sess-row-3 { display: flex; }
+  .toolbar-btns { width: 100%; justify-content: flex-end; margin-left: 0; flex-wrap: wrap; gap: 5px; }
+  .btn { font-size: 11px; padding: 7px 10px; min-height: 36px; }
 
   /* simplified grid for phone — hide note, show on expand */
   .col-headers {
@@ -616,34 +633,40 @@ body {
 
 <!-- ══════════ SESSION META BAR ══════════ -->
 <div class="session-bar">
-  <div class="session-field">
-    <label>Date</label>
-    <input type="date" id="sess-date" onchange="scheduleSave()">
+  <div class="sess-row sess-row-1">
+    <div class="session-field">
+      <label>Date</label>
+      <input type="date" id="sess-date" onchange="scheduleSave()">
+    </div>
+    <div class="session-field">
+      <label>Start</label>
+      <input type="time" id="sess-start" onchange="scheduleSave()">
+    </div>
+    <div class="session-field">
+      <label>End</label>
+      <input type="time" id="sess-end" onchange="scheduleSave()">
+    </div>
   </div>
-  <div class="session-field">
-    <label>Start</label>
-    <input type="time" id="sess-start" onchange="scheduleSave()">
+  <div class="sess-row sess-row-2">
+    <div class="session-field" style="flex:1;">
+      <label>Street</label>
+      <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="scheduleSave()">
+    </div>
+    <div class="session-field sess-counter">
+      <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked/Total</label>
+      <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+    </div>
   </div>
-  <div class="session-field">
-    <label>End</label>
-    <input type="time" id="sess-end" onchange="scheduleSave()">
-  </div>
-  <div class="session-field">
-    <label>Street</label>
-    <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="scheduleSave()">
-  </div>
-  <div style="display:flex;align-items:center;gap:7px;">
-    <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
-    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
-  </div>
-  <div class="toolbar-btns">
-    <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
-    <button class="btn btn-outline" onclick="addRow()">+ Row</button>
-    <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
-    <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
-    <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
-    <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
-    <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+  <div class="sess-row sess-row-3">
+    <div class="toolbar-btns">
+      <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
+      <button class="btn btn-outline" onclick="addRow()">+ Row</button>
+      <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
+      <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
+      <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
+      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
   </div>
 </div>
 
