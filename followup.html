@@ -416,6 +416,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         </div>
         <div class="pdiv"></div>
         <div class="pf"><label>Follow-Up Hook</label><textarea id="p-hook" style="min-height:48px"></textarea></div>
+        <div class="pdiv"></div>
+        <div style="text-align:center;">
+          <button class="btn btn-primary" onclick="setReminder()" style="width:100%;justify-content:center;gap:8px;font-size:var(--fs-base);padding:12px;">
+            📅 Set Reminder in Google Calendar
+          </button>
+          <div id="reminder-msg" style="font-size:11px;color:var(--muted);margin-top:6px;display:none;"></div>
+        </div>
       </div>
     </div>
     <div class="pcard">
@@ -876,6 +883,94 @@ function buildDetailBlock(r) {
     (sigs?'<div class="pd-note-full">'+f('Signals','<span class="pd-signals">'+sigs+'</span>')+'</div>':'')+
     (d.referrals?'<div class="pd-note-full">'+f('Referrals',d.referrals)+'</div>':'')+
     '</div>';
+}
+
+// ─────────────────────────────────────────
+// SET REMINDER — Google Calendar deep link
+// ─────────────────────────────────────────
+function setReminder() {
+  var fudate = document.getElementById('p-fudate').value;
+  if (!fudate) {
+    var msg = document.getElementById('reminder-msg');
+    msg.textContent = '⚠️ Please set a Follow-Up Date first.';
+    msg.style.color = '#d94f4f';
+    msg.style.display = 'block';
+    setTimeout(function(){ msg.style.display = 'none'; }, 3000);
+    return;
+  }
+
+  var fname = (document.getElementById('p-fname').value || '').trim();
+  var lname = (document.getElementById('p-lname').value || '').trim();
+  var method = document.getElementById('p-fumethod').value;
+  var futimeVal = document.getElementById('p-futime').value;
+
+  // Contact method abbreviation map
+  var methodAbbr = {
+    'Phone Call': 'CLL',
+    'Text': 'TXT',
+    'Email': 'EML',
+    'Door Knock Again': 'DKNK',
+    'Mail / Drop-off': 'MAIL',
+    'Appointment': 'APPT'
+  };
+  var abbr = method ? (methodAbbr[method] || 'RMDR') : 'RMDR';
+
+  // Build event title: FirstName LastName FL ABBR
+  var title = ((fname + ' ' + lname).trim() + ' FL ' + abbr).trim();
+
+  // Parse follow-up time or default to 8:00 AM
+  var hours = 8, minutes = 0;
+  if (futimeVal) {
+    var match = futimeVal.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) {
+      hours = parseInt(match[1]);
+      minutes = parseInt(match[2]);
+      var ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && hours !== 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+    }
+  }
+
+  // Build date strings in Google Calendar format: YYYYMMDDTHHmmss
+  var dateParts = fudate.split('-');
+  var y = dateParts[0], m = dateParts[1], d = dateParts[2];
+  var startH = String(hours).padStart(2, '0');
+  var startM = String(minutes).padStart(2, '0');
+
+  // End time = start + 30 minutes
+  var endHours = hours;
+  var endMinutes = minutes + 30;
+  if (endMinutes >= 60) { endHours++; endMinutes -= 60; }
+  var endH = String(endHours).padStart(2, '0');
+  var endM = String(endMinutes).padStart(2, '0');
+
+  var startStr = y + m + d + 'T' + startH + startM + '00';
+  var endStr   = y + m + d + 'T' + endH + endM + '00';
+
+  // Build description with context
+  var hook = (document.getElementById('p-hook').value || '').trim();
+  var promised = (document.getElementById('p-promised').value || '').trim();
+  var address = (document.getElementById('p-address').value || '').trim();
+  var desc = '';
+  if (address) desc += 'Address: ' + address + '\n';
+  if (method) desc += 'Method: ' + method + '\n';
+  if (promised) desc += 'Promised: ' + promised + '\n';
+  if (hook) desc += 'Hook: ' + hook + '\n';
+
+  // Google Calendar deep link
+  var url = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(title)
+    + '&dates=' + startStr + '/' + endStr
+    + '&details=' + encodeURIComponent(desc)
+    + '&trp=false';
+
+  window.open(url, '_blank');
+
+  var msg = document.getElementById('reminder-msg');
+  msg.textContent = '✓ Opening Google Calendar…';
+  msg.style.color = '#7c9a5e';
+  msg.style.display = 'block';
+  setTimeout(function(){ msg.style.display = 'none'; }, 3000);
 }
 
 // ─────────────────────────────────────────

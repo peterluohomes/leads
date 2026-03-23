@@ -792,6 +792,13 @@ body {
         </div>
         <div class="pdiv"></div>
         <div class="pf"><label>Follow-Up Hook (personalized opener)</label><textarea id="p-hook" style="min-height:48px"></textarea></div>
+        <div class="pdiv"></div>
+        <div style="text-align:center;">
+          <button class="btn btn-primary" onclick="setReminder()" style="width:100%;justify-content:center;gap:8px;font-size:var(--fs-base);padding:12px;">
+            📅 Set Reminder in Google Calendar
+          </button>
+          <div id="reminder-msg" style="font-size:11px;color:var(--muted);margin-top:6px;display:none;"></div>
+        </div>
       </div>
     </div>
 
@@ -1333,6 +1340,94 @@ function saveDetail() {
   closePanel();
   render();
   scheduleSave();
+}
+
+// ─────────────────────────────────────────
+// SET REMINDER — Google Calendar deep link
+// ─────────────────────────────────────────
+function setReminder() {
+  const fudate = document.getElementById('p-fudate').value;
+  if (!fudate) {
+    const msg = document.getElementById('reminder-msg');
+    msg.textContent = '⚠️ Please set a Follow-Up Date first.';
+    msg.style.color = '#d94f4f';
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    return;
+  }
+
+  const fname = (document.getElementById('p-fname').value || '').trim();
+  const lname = (document.getElementById('p-lname').value || '').trim();
+  const method = document.getElementById('p-fumethod').value;
+  const futimeVal = document.getElementById('p-futime').value;
+
+  // Contact method abbreviation map
+  const methodAbbr = {
+    'Phone Call': 'CLL',
+    'Text': 'TXT',
+    'Email': 'EML',
+    'Door Knock Again': 'DKNK',
+    'Mail / Drop-off': 'MAIL',
+    'Appointment': 'APPT',
+  };
+  const abbr = method ? (methodAbbr[method] || 'RMDR') : 'RMDR';
+
+  // Build event title
+  const title = ((fname + ' ' + lname).trim() + ' DK ' + abbr).trim();
+
+  // Parse follow-up time or default to 8:00 AM
+  let hours = 8, minutes = 0;
+  if (futimeVal) {
+    const match = futimeVal.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) {
+      hours = parseInt(match[1]);
+      minutes = parseInt(match[2]);
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && hours !== 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+    }
+  }
+
+  // Build date strings in Google Calendar format: YYYYMMDDTHHmmss
+  const dateParts = fudate.split('-');
+  const y = dateParts[0], m = dateParts[1], d = dateParts[2];
+  const startH = String(hours).padStart(2, '0');
+  const startM = String(minutes).padStart(2, '0');
+
+  // End time = start + 30 minutes
+  let endHours = hours;
+  let endMinutes = minutes + 30;
+  if (endMinutes >= 60) { endHours++; endMinutes -= 60; }
+  const endH = String(endHours).padStart(2, '0');
+  const endM = String(endMinutes).padStart(2, '0');
+
+  const startStr = `${y}${m}${d}T${startH}${startM}00`;
+  const endStr   = `${y}${m}${d}T${endH}${endM}00`;
+
+  // Build description with context
+  const hook = (document.getElementById('p-hook').value || '').trim();
+  const promised = (document.getElementById('p-promised').value || '').trim();
+  const address = (document.getElementById('p-address').value || '').trim();
+  let desc = '';
+  if (address) desc += 'Address: ' + address + '\\n';
+  if (method) desc += 'Method: ' + method + '\\n';
+  if (promised) desc += 'Promised: ' + promised + '\\n';
+  if (hook) desc += 'Hook: ' + hook + '\\n';
+
+  // Google Calendar deep link
+  const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(title)
+    + '&dates=' + startStr + '/' + endStr
+    + '&details=' + encodeURIComponent(desc)
+    + '&trp=false';
+
+  window.open(url, '_blank');
+
+  const msg = document.getElementById('reminder-msg');
+  msg.textContent = '✓ Opening Google Calendar…';
+  msg.style.color = '#7c9a5e';
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 3000);
 }
 
 // ─────────────────────────────────────────
