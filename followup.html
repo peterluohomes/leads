@@ -29,6 +29,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .session-field input { background: rgba(255,255,255,0.08); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: white; font-family: 'DM Mono', monospace; font-size: var(--fs-mono); padding: 8px 10px; min-height: var(--tap); outline: none; min-width: 140px; }
 .session-field input:focus { border-color: var(--gold); background: rgba(255,255,255,0.12); }
 .toolbar-btns { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.sess-row { display: flex; align-items: center; gap: 14px; }
+.sess-print-btn { display: none; }
+.sess-print-desktop { display: flex; }
 .btn { padding: 10px 18px; min-height: var(--tap); border-radius: 6px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: var(--fs-label); font-weight: 600; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
 .btn-outline { background: transparent; border: 1.5px solid var(--gold); color: var(--gold); }
 .btn-outline:hover { background: var(--gold); color: var(--navy); }
@@ -177,10 +180,28 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   :root { --fs-base:15px; --fs-label:11px; --fs-cell:13px; --panel-w:100vw; }
   .page-header { padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
   .reminder { font-size: 12px; padding: 7px 10px; white-space: normal; width: 100%; }
-  .session-bar { padding: 8px 12px; gap: 8px; }
+  .session-bar { padding: 6px 10px; gap: 5px; flex-direction: column; }
+  .sess-row { width: 100%; gap: 6px; }
+
+  /* Row 1: Date + Talked/Total + Print */
+  .sess-row-1 { display: flex; align-items: center; }
+  .sess-row-1 .session-field { flex: 0 0 auto; min-width: 0; }
+  .sess-row-1 .session-field input { min-width: unset; width: 120px; font-size: 13px; padding: 6px 4px; }
+  .sess-row-1 .session-field label { font-size: 9px; }
+  .sess-row-1 .sess-field-counter { flex: 1; }
+  .sess-row-1 .sess-field-counter label { font-size: 9px; }
+  .sess-row-1 #contact-counter { font-size: 15px; padding: 5px 8px; min-height: 36px; }
+  .sess-print-btn { display: flex !important; flex-shrink: 0; font-size: 11px; padding: 7px 12px; min-height: 36px; }
+  .sess-print-desktop { display: none !important; }
+
+  /* Row 2: all other buttons spread evenly */
+  .sess-row-2 { display: flex; }
+  .toolbar-btns { width: 100%; margin-left: 0; display: flex; flex-wrap: nowrap; gap: 0; }
+  .toolbar-btns .btn { flex: 1; justify-content: center; font-size: 11px; padding: 7px 4px; min-height: 36px; border-radius: 0; }
+  .toolbar-btns .btn:first-of-type { border-radius: 6px 0 0 6px; }
+  .toolbar-btns .btn:last-of-type { border-radius: 0 6px 6px 0; }
+  #autosave-status { display: none !important; }
   .session-field { flex: 1 1 auto; min-width: 130px; }
-  .toolbar-btns { width: 100%; justify-content: flex-end; margin-left: 0; flex-wrap: wrap; }
-  .btn { font-size: 12px; padding: 9px 12px; }
 
   /* Hide desktop col-headers entirely on mobile */
   .col-headers { display: none; }
@@ -260,26 +281,31 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 </div>
 
 <div class="session-bar">
-  <div class="session-field">
-    <label>Date</label>
-    <input type="date" id="sess-date" onchange="scheduleSave()">
+  <div class="sess-row sess-row-1">
+    <div class="session-field">
+      <label>Date</label>
+      <input type="date" id="sess-date" onchange="scheduleSave()">
+    </div>
+    <div class="sess-field-counter" style="display:flex;align-items:center;gap:7px;">
+      <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
+      <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+    </div>
+    <button class="btn btn-primary sess-print-btn" onclick="window.print()">🖨 Print</button>
   </div>
-  <div style="display:flex;align-items:center;gap:7px;">
-    <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
-    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
-  </div>
-  <div class="toolbar-btns">
-    <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
-    <button class="btn btn-outline" onclick="addRow()">+ Row</button>
-    <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
-    <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
-    <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
-    <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
-    <button class="btn btn-read" onclick="document.getElementById('read-dk-input').click()">📋 Read</button>
-    <input type="file" id="read-dk-input" accept=".json" style="display:none" onchange="readDoorKnock(event)">
-    <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
-    <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
-    <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+  <div class="sess-row sess-row-2">
+    <div class="toolbar-btns">
+      <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
+      <button class="btn btn-outline" onclick="addRow()">+ Row</button>
+      <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
+      <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
+      <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
+      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
+      <button class="btn btn-read" onclick="document.getElementById('read-dk-input').click()">📋 Read</button>
+      <input type="file" id="read-dk-input" accept=".json" style="display:none" onchange="readDoorKnock(event)">
+      <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
+      <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
+      <button class="btn btn-primary sess-print-desktop" onclick="window.print()">🖨 Print</button>
+    </div>
   </div>
 </div>
 

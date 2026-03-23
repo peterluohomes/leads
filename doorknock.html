@@ -517,11 +517,11 @@ body {
     gap: 8px;
   }
   .reminder {
-    font-size: 10px; padding: 5px 8px; white-space: nowrap;
+    font-size: 8px; padding: 5px 8px; white-space: nowrap;
     flex: 1; min-width: 0;
     letter-spacing: 0.3px;
   }
-  .reminder span { font-size: 9px; margin-top: 1px; }
+  .reminder span { font-size: 7px; margin-top: 1px; }
   .hdr-controls { gap: 4px; flex-shrink: 0; }
   .hdr-controls #rec-btn { padding: 4px 8px !important; font-size: 10px !important; }
   .weather-group select { font-size: 10px; padding: 3px 4px; max-width: 72px; }
@@ -547,10 +547,13 @@ body {
   .sess-row-2 .sess-counter label { font-size: 9px; }
   .sess-row-2 #contact-counter { font-size: 15px; padding: 5px 8px; min-height: 36px; }
 
-  /* Row 3: toolbar buttons */
+  /* Row 3: toolbar buttons spread evenly */
   .sess-row-3 { display: flex; }
-  .toolbar-btns { width: 100%; justify-content: flex-end; margin-left: 0; flex-wrap: wrap; gap: 5px; }
-  .btn { font-size: 11px; padding: 7px 10px; min-height: 36px; }
+  .toolbar-btns { width: 100%; margin-left: 0; display: flex; flex-wrap: nowrap; gap: 0; }
+  .toolbar-btns .btn { flex: 1; justify-content: center; font-size: 11px; padding: 7px 4px; min-height: 36px; border-radius: 0; }
+  .toolbar-btns .btn:first-of-type { border-radius: 6px 0 0 6px; }
+  .toolbar-btns .btn:last-of-type { border-radius: 0 6px 6px 0; }
+  #autosave-status { display: none !important; }
 
   /* simplified grid for phone — hide note, show on expand */
   .col-headers {
