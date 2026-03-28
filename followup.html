@@ -679,6 +679,11 @@ function splitPhone(ph) {
   return [ph, ''];
 }
 
+function phoneDigits(ph) {
+  if (!ph) return '';
+  return ph.replace(/[^0-9]/g, '');
+}
+
 function splitName(name) {
   if (!name) return ['',''];
   if (name.indexOf(',') > 0) {
@@ -741,9 +746,12 @@ function render() {
         '<div class="mob-first">' + (esc(nameParts[1])||'<span style="color:var(--border)">First</span>') + '</div>' +
         '</div>';
 
+      var phoneRaw = phoneDigits(r.phone);
       var phoneCell = '<div class="cell">' +
+        (phoneRaw ? '<a href="tel:' + phoneRaw + '" style="text-decoration:none;color:inherit;display:block;">' : '') +
         '<div class="mob-phone-top">' + (esc(phoneParts[0])||'<span style="color:var(--border)">Phone</span>') + '</div>' +
         '<div class="mob-phone-bot">' + (esc(phoneParts[1])||'<span style="color:var(--border)">—</span>') + '</div>' +
+        (phoneRaw ? '</a>' : '') +
         '</div>';
 
       var tempDateCell = '<div class="cell" style="grid-column:4;grid-row:1;display:flex;align-items:center;justify-content:center;">' + tpill + '</div>' +
@@ -918,7 +926,8 @@ function buildDetailBlock(r) {
   var stars = d.stars ? '★'.repeat(d.stars)+'☆'.repeat(5-d.stars) : '';
   var sigs = (d.signals||[]).map(function(x){ return SIGNAL_LABELS[x]; }).filter(Boolean).join(' · ');
   function f(l,v){ return v ? '<div class="pd-field"><span class="pd-label">'+l+':</span><span class="pd-val">'+v+'</span></div>' : ''; }
-  return '<div class="pd-grid">'+f('Name',name)+f('Phone',d.phone)+f('Email',d.email)+
+  function fphone(l,v){ if(!v) return ''; var dg=phoneDigits(v); return '<div class="pd-field"><span class="pd-label">'+l+':</span><span class="pd-val">'+(dg?'<a href="tel:'+dg+'" style="color:var(--accent);text-decoration:none;">'+v+'</a>':v)+'</span></div>'; }
+  return '<div class="pd-grid">'+f('Name',name)+fphone('Phone',d.phone)+f('Email',d.email)+
     f('Address',d.address||r.address)+f('Language',d.lang)+f('Best Time',d.besttime)+
     f('Property',d.proptype)+f('Years There',d.years)+f('Attitude',d.attitude)+
     '<div class="pd-field"><span class="pd-label">Temp:</span><span class="pd-temp '+tc+'">'+tl+'</span>'+(stars?'&nbsp;<span style="color:#c9a84c;font-size:10px;">'+stars+'</span>':'')+
