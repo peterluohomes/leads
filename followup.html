@@ -287,6 +287,72 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .ck-grid { grid-template-columns: 1fr; }
   .temp-pill { font-size:10px; padding:2px 7px; }
 }
+  /* ── Phone Action Popup ── */
+  .phone-popup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,18,35,0.55);
+    backdrop-filter: blur(2px);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .phone-popup-overlay.open { display: flex; }
+  .phone-popup {
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    width: 100%; max-width: 400px;
+    padding: 20px 16px calc(env(safe-area-inset-bottom,12px) + 12px);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+  }
+  .phone-popup-num {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 18px; font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .phone-popup-actions {
+    display: flex; gap: 10px;
+  }
+  .phone-popup-btn {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    padding: 16px 0;
+    border: 1.5px solid var(--rule);
+    border-radius: 12px;
+    background: var(--bg);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--navy);
+    transition: background 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .phone-popup-btn:active {
+    background: var(--navy);
+    color: #fff;
+    border-color: var(--navy);
+  }
+  .phone-popup-btn:active svg { fill: #fff; }
+  .phone-popup-btn svg {
+    width: 28px; height: 28px;
+    fill: var(--navy);
+  }
+  .phone-popup-cancel {
+    display: block; width: 100%;
+    margin-top: 10px; padding: 14px 0;
+    border: none; border-radius: 12px;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .phone-popup-cancel:active { background: var(--rule); }
 </style>
 </head>
 <body>
@@ -354,6 +420,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <div class="add-row-bar"><button class="add-row-btn" onclick="addRow()">＋ Add Row</button></div>
 
 <div class="panel-overlay" id="overlay" onclick="closePanel()"></div>
+
+<div class="phone-popup-overlay" id="phonePopup" onclick="closePhonePopup()">
+  <div class="phone-popup" onclick="event.stopPropagation()">
+    <div class="phone-popup-num" id="phonePopupNum"></div>
+    <div class="phone-popup-actions">
+      <button class="phone-popup-btn" id="phonePopupCall" onclick="doPhoneCall()">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.24 1.01l-2.21 2.2z"/></svg>
+        Call
+      </button>
+      <button class="phone-popup-btn" id="phonePopupText" onclick="doPhoneText()">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+        Text
+      </button>
+    </div>
+    <button class="phone-popup-cancel" onclick="closePhonePopup()">Cancel</button>
+  </div>
+</div>
 <div class="detail-panel" id="detail-panel">
   <div class="panel-header">
     <div><h2 id="panel-title">Lead Detail Card</h2><p id="panel-subtitle">Full contact &amp; follow-up record</p></div>
@@ -684,6 +767,25 @@ function phoneDigits(ph) {
   return ph.replace(/[^0-9]/g, '');
 }
 
+var _phonePopupDigits = '';
+function showPhonePopup(digits, formatted) {
+  _phonePopupDigits = digits;
+  document.getElementById('phonePopupNum').textContent = formatted || digits;
+  document.getElementById('phonePopup').classList.add('open');
+}
+function closePhonePopup() {
+  document.getElementById('phonePopup').classList.remove('open');
+  _phonePopupDigits = '';
+}
+function doPhoneCall() {
+  if (_phonePopupDigits) window.location.href = 'tel:' + _phonePopupDigits;
+  closePhonePopup();
+}
+function doPhoneText() {
+  if (_phonePopupDigits) window.location.href = 'sms:' + _phonePopupDigits;
+  closePhonePopup();
+}
+
 function splitName(name) {
   if (!name) return ['',''];
   if (name.indexOf(',') > 0) {
@@ -747,11 +849,9 @@ function render() {
         '</div>';
 
       var phoneRaw = phoneDigits(r.phone);
-      var phoneCell = '<div class="cell">' +
-        (phoneRaw ? '<a href="tel:' + phoneRaw + '" style="text-decoration:none;color:inherit;display:block;">' : '') +
+      var phoneCell = '<div class="cell"' + (phoneRaw ? ' onclick="showPhonePopup(\'' + phoneRaw + '\',\'' + esc(r.phone) + '\')" style="cursor:pointer;"' : '') + '>' +
         '<div class="mob-phone-top">' + (esc(phoneParts[0])||'<span style="color:var(--border)">Phone</span>') + '</div>' +
         '<div class="mob-phone-bot">' + (esc(phoneParts[1])||'<span style="color:var(--border)">—</span>') + '</div>' +
-        (phoneRaw ? '</a>' : '') +
         '</div>';
 
       var tempDateCell = '<div class="cell" style="grid-column:4;grid-row:1;display:flex;align-items:center;justify-content:center;">' + tpill + '</div>' +
@@ -926,7 +1026,7 @@ function buildDetailBlock(r) {
   var stars = d.stars ? '★'.repeat(d.stars)+'☆'.repeat(5-d.stars) : '';
   var sigs = (d.signals||[]).map(function(x){ return SIGNAL_LABELS[x]; }).filter(Boolean).join(' · ');
   function f(l,v){ return v ? '<div class="pd-field"><span class="pd-label">'+l+':</span><span class="pd-val">'+v+'</span></div>' : ''; }
-  function fphone(l,v){ if(!v) return ''; var dg=phoneDigits(v); return '<div class="pd-field"><span class="pd-label">'+l+':</span><span class="pd-val">'+(dg?'<a href="tel:'+dg+'" style="color:var(--accent);text-decoration:none;">'+v+'</a>':v)+'</span></div>'; }
+  function fphone(l,v){ if(!v) return ''; var dg=phoneDigits(v); return '<div class="pd-field"><span class="pd-label">'+l+':</span><span class="pd-val">'+(dg?'<span onclick="showPhonePopup(\''+dg+'\',\''+esc(v)+'\')" style="color:var(--accent);cursor:pointer;">'+v+'</span>':v)+'</span></div>'; }
   return '<div class="pd-grid">'+f('Name',name)+fphone('Phone',d.phone)+f('Email',d.email)+
     f('Address',d.address||r.address)+f('Language',d.lang)+f('Best Time',d.besttime)+
     f('Property',d.proptype)+f('Years There',d.years)+f('Attitude',d.attitude)+
