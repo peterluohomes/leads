@@ -11,7 +11,7 @@
   --gold: #c9a84c; --gold2: #e0c070;
   --cream: #faf6ee; --cream2: #f0e8d5;
   --border: #ddd3bc; --text: #2c2c2c; --muted: #888;
-  --hot: #d94f4f; --warm: #d4882a; --cool: #3f79be; --cold: #7a7a99; --dnc: #555;
+  --hot: #d94f4f; --warm: #d4882a; --cool: #3f79be; --cold: #7a7a99; --dnc: #555; --client: #2e7d32;
   --row-even: #fffdf8; --row-odd: #f5f0e6;
   --panel-w: 680px; --tap: 44px; --row-h: 48px;
   --fs-base: 15px; --fs-label: 11px; --fs-cell: 14px; --fs-mono: 14px;
@@ -46,6 +46,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .sort-btn { background: rgba(201,168,76,0.2); border: 1px solid rgba(201,168,76,0.5); border-radius: 4px; color: var(--gold); font-size: 11px; padding: 2px 6px; cursor: pointer; transition: all 0.15s; }
 .sort-btn:hover { background: var(--gold); color: var(--navy); }
 
+/* Search bar */
+.search-bar { background: var(--navy2); padding: 8px 14px; display: none; align-items: center; gap: 8px; border-bottom: 1px solid rgba(201,168,76,0.3); }
+.search-bar.open { display: flex; }
+.search-bar input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: white; font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 8px 12px; min-height: 40px; outline: none; }
+.search-bar input:focus { border-color: var(--gold); background: rgba(255,255,255,0.15); }
+.search-bar input::placeholder { color: rgba(255,255,255,0.4); }
+.search-info { font-size: 11px; color: var(--gold); font-weight: 600; white-space: nowrap; min-width: 60px; text-align: center; }
+.search-close-btn { width: 36px; height: 36px; border-radius: 50%; background: transparent; border: 1.5px solid rgba(201,168,76,0.5); color: var(--gold); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+.search-close-btn:hover { background: var(--gold); color: var(--navy); }
+.search-toggle { background: rgba(201,168,76,0.2); border: 1px solid rgba(201,168,76,0.5); border-radius: 4px; color: var(--gold); font-size: 11px; padding: 2px 6px; cursor: pointer; transition: all 0.15s; margin-left: 2px; }
+.search-toggle:hover { background: var(--gold); color: var(--navy); }
+.lead-row.search-hidden { display: none !important; }
+
 .rows-container { padding: 0 0 100px; }
 .lead-row { display: grid; grid-template-columns: 2fr 1.4fr 130px 90px 120px 100px 44px 32px; gap: 0; align-items: center; border-bottom: 1px solid var(--border); padding: 4px 10px 4px 14px; min-height: var(--row-h); transition: background 0.1s; }
 .lead-row:nth-child(even) { background: var(--row-even); }
@@ -60,6 +73,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .temp-pill.cool { background: var(--cool); }
 .temp-pill.cold { background: var(--cold); }
 .temp-pill.dnc  { background: var(--dnc); }
+.temp-pill.client { background: var(--client); }
 .temp-pill.none { background: var(--border); color: var(--muted); }
 .date-overdue { color: var(--hot) !important; font-weight: 600; }
 .date-today   { color: var(--warm) !important; font-weight: 600; }
@@ -104,6 +118,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .temp-btn[data-t="cool"] { --c: var(--cool); }
 .temp-btn[data-t="cold"] { --c: var(--cold); }
 .temp-btn[data-t="dnc"]  { --c: var(--dnc); }
+.temp-btn[data-t="client"] { --c: var(--client); }
 .temp-btn.active { background: var(--c); border-color: var(--c); }
 .ck-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
 .ck-item { display: flex; align-items: center; gap: 8px; font-size: var(--fs-base); cursor: pointer; min-height: var(--tap); }
@@ -137,7 +152,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .print-detail { display: none; }
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .toolbar-btns, .expand-btn, .remove-btn, .add-row-bar, .panel-overlay, .detail-panel, .page-footer, .sort-btn, #autosave-status { display: none !important; }
+  .toolbar-btns, .expand-btn, .remove-btn, .add-row-bar, .panel-overlay, .detail-panel, .page-footer, .sort-btn, .search-bar, .search-toggle, #autosave-status { display: none !important; }
   body { background: white; font-size: 11px; }
   .lead-row { min-height: 26px; padding: 3px 10px 3px 14px; }
   .cell input { font-size: 11px; padding: 2px 3px; }
@@ -151,7 +166,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .print-detail .pd-temp { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; color: white; }
   .print-detail .pd-temp.hot { background:#d94f4f; } .print-detail .pd-temp.warm { background:#d4882a; }
   .print-detail .pd-temp.cool { background:#3f79be; } .print-detail .pd-temp.cold { background:#7a7a99; }
-  .print-detail .pd-temp.dnc { background:#555; }
+  .print-detail .pd-temp.dnc { background:#555; } .print-detail .pd-temp.client { background:#2e7d32; }
   .print-detail .pd-signals { font-style: italic; color: #555; }
 }
 
@@ -311,7 +326,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 <div class="col-headers">
   <span>Address <button class="sort-btn" id="sort-addr-btn" onclick="sortByAddress()">↕</button></span>
-  <span>Name</span>
+  <span>Name <button class="search-toggle" onclick="toggleSearch()" title="Search">🔍</button></span>
   <span>Phone</span>
   <span>Temp <button class="sort-btn" id="sort-temp-btn" onclick="sortByTemp()">↕</button></span>
   <span>Follow-Up Date <button class="sort-btn" id="sort-date-btn" onclick="sortByDate()">↕</button></span>
@@ -323,10 +338,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 <div class="mob-col-header">
   <span>Address <button class="mch-btn" onclick="sortByAddress()">↕</button></span>
-  <span>Name</span>
+  <span>Name <button class="mch-btn" onclick="toggleSearch()" title="Search">🔍</button></span>
   <span>Phone</span>
-  <span>Temp / Date <button class="mch-btn" onclick="sortByDate()">↕</button></span>
+  <span>Temp <button class="mch-btn" id="mob-sort-temp-btn" onclick="sortByTemp()">↕</button> Date <button class="mch-btn" id="mob-sort-date-btn" onclick="sortByDate()">↕</button></span>
   <span></span>
+</div>
+
+<div class="search-bar" id="searchBar">
+  <input type="text" id="searchInput" placeholder="Search name, address, or phone..." oninput="doSearch()">
+  <span class="search-info" id="searchInfo"></span>
+  <button class="search-close-btn" onclick="clearSearch()" title="Close search">✕</button>
 </div>
 
 <div class="rows-container" id="rows-container"></div>
@@ -372,6 +393,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       <div class="pcard-header">🌡 Lead Temperature</div>
       <div class="pcard-body">
         <div class="temp-row" id="p-temp-row">
+          <button class="temp-btn" data-t="client" onclick="setPTemp(this)">📝 Client — Under Contract</button>
           <button class="temp-btn" data-t="hot"  onclick="setPTemp(this)">🔥 Hot — Selling within 12 mo.</button>
           <button class="temp-btn" data-t="warm" onclick="setPTemp(this)">🟡 Warm — Open / Curious</button>
           <button class="temp-btn" data-t="cool" onclick="setPTemp(this)">🔵 Cool — Future possible</button>
@@ -486,8 +508,8 @@ var panelTemp = '';
 var tempSortDir = 'desc';
 var dateSortDir = 'desc';
 
-var TEMP_LABELS = { hot:'🔥 Hot', warm:'🟡 Warm', cool:'🔵 Cool', cold:'❄️ Cold', dnc:'⛔ DNC' };
-var TEMP_ORDER  = { hot:0, warm:1, cool:2, cold:3, dnc:4 };
+var TEMP_LABELS = { client:'📝 Client', hot:'🔥 Hot', warm:'🟡 Warm', cool:'🔵 Cool', cold:'❄️ Cold', dnc:'⛔ DNC' };
+var TEMP_ORDER  = { client:0, hot:1, warm:2, cool:3, cold:4, dnc:5 };
 var SIGNAL_LABELS = [
   'Curious about home value','Mentioned a timeframe','Asked about the market',
   'Life event (retirement/divorce)','Kids leaving home','Considering downsizing',
@@ -743,8 +765,8 @@ function render() {
         ? '<span class="' + dc + '" style="font-family:\'DM Mono\',monospace;font-size:13px;">' + r.fudate + '</span>'
         : '<span style="color:var(--border)">&mdash;</span>';
       div.innerHTML =
-        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="245 Bayview Ave" oninput="rows[' + i + '].address=this.value;markTalked(' + i + ')"></div>' +
-        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="Last, First" oninput="rows[' + i + '].name=this.value;markTalked(' + i + ')"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.address) + '" placeholder="Address" oninput="rows[' + i + '].address=this.value;markTalked(' + i + ')"></div>' +
+        '<div class="cell"><input type="text" value="' + esc(r.name) + '" placeholder="" oninput="rows[' + i + '].name=this.value;markTalked(' + i + ')"></div>' +
         '<div class="cell"><input type="tel" value="' + esc(r.phone) + '" placeholder="(416)555-1234" maxlength="13" oninput="formatPhone(this);rows[' + i + '].phone=this.value;markTalked(' + i + ')" style="font-family:\'DM Mono\',monospace;"></div>' +
         '<div class="cell" style="display:flex;align-items:center;">' + tpill + '</div>' +
         '<div class="cell" style="display:flex;align-items:center;">' + ddisp + '</div>' +
@@ -763,6 +785,8 @@ function render() {
     }
   });
   updateCounter();
+  // Re-apply search filter if active
+  if (searchActive && document.getElementById('searchInput').value) doSearch();
 }
 
 function addRow() {
@@ -1105,6 +1129,66 @@ function readDoorKnock(event) {
     event.target.value='';
   };
   reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────
+// SEARCH
+// ─────────────────────────────────────────
+var searchActive = false;
+
+function toggleSearch() {
+  var bar = document.getElementById('searchBar');
+  if (bar.classList.contains('open')) {
+    clearSearch();
+  } else {
+    bar.classList.add('open');
+    searchActive = true;
+    document.getElementById('searchInput').focus();
+  }
+}
+
+function clearSearch() {
+  var bar = document.getElementById('searchBar');
+  bar.classList.remove('open');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchInfo').textContent = '';
+  searchActive = false;
+  // Show all rows
+  var rowEls = document.querySelectorAll('.lead-row');
+  for (var i = 0; i < rowEls.length; i++) {
+    rowEls[i].classList.remove('search-hidden');
+  }
+}
+
+function doSearch() {
+  var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  var rowEls = document.querySelectorAll('.lead-row');
+  var detailEls = document.querySelectorAll('.print-detail');
+  if (!q) {
+    for (var i = 0; i < rowEls.length; i++) rowEls[i].classList.remove('search-hidden');
+    for (var i = 0; i < detailEls.length; i++) detailEls[i].style.display = '';
+    document.getElementById('searchInfo').textContent = '';
+    return;
+  }
+  var shown = 0, detailIdx = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var haystack = ((r.address||'') + ' ' + (r.name||'') + ' ' + (r.phone||'')).toLowerCase();
+    if (r.detail) {
+      haystack += ' ' + ((r.detail.fname||'') + ' ' + (r.detail.lname||'') + ' ' + (r.detail.address||'') + ' ' + (r.detail.phone||'') + ' ' + (r.detail.email||'')).toLowerCase();
+    }
+    var match = haystack.indexOf(q) >= 0;
+    if (rowEls[i]) {
+      if (match) { rowEls[i].classList.remove('search-hidden'); shown++; }
+      else { rowEls[i].classList.add('search-hidden'); }
+    }
+    // Hide corresponding print-detail if it exists for this row
+    if (r.detail && detailEls[detailIdx]) {
+      detailEls[detailIdx].style.display = match ? '' : 'none';
+      detailIdx++;
+    }
+  }
+  document.getElementById('searchInfo').textContent = shown + '/' + rows.length;
 }
 
 // ─────────────────────────────────────────
