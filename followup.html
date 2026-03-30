@@ -12,6 +12,8 @@
   --cream: #faf6ee; --cream2: #f0e8d5;
   --border: #ddd3bc; --text: #2c2c2c; --muted: #888;
   --hot: #d94f4f; --warm: #d4882a; --cool: #3f79be; --cold: #7a7a99; --dnc: #555; --client: #2e7d32;
+  --t-a: #2e7d32; --t-b: #d94f4f; --t-c1: #e06020; --t-c2: #d4882a; --t-c3: #c9a84c;
+  --t-d2: #5a9bd5; --t-d1: #3f79be; --t-e2: #7a8cb8; --t-e1: #7a7a99; --t-f: #555;
   --row-even: #fffdf8; --row-odd: #f5f0e6;
   --panel-w: 680px; --tap: 44px; --row-h: 48px;
   --fs-base: 15px; --fs-label: 11px; --fs-cell: 14px; --fs-mono: 14px;
@@ -68,12 +70,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .cell input:focus { border-bottom-color: var(--gold); background: rgba(201,168,76,0.07); }
 
 .temp-pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: white; white-space: nowrap; }
-.temp-pill.hot  { background: var(--hot); }
-.temp-pill.warm { background: var(--warm); }
-.temp-pill.cool { background: var(--cool); }
-.temp-pill.cold { background: var(--cold); }
-.temp-pill.dnc  { background: var(--dnc); }
-.temp-pill.client { background: var(--client); }
+.temp-pill.a  { background: var(--t-a); }
+.temp-pill.b  { background: var(--t-b); }
+.temp-pill.c1 { background: var(--t-c1); }
+.temp-pill.c2 { background: var(--t-c2); }
+.temp-pill.c3 { background: var(--t-c3); }
+.temp-pill.d2 { background: var(--t-d2); }
+.temp-pill.d1 { background: var(--t-d1); }
+.temp-pill.e2 { background: var(--t-e2); }
+.temp-pill.e1 { background: var(--t-e1); }
+.temp-pill.f  { background: var(--t-f); }
 .temp-pill.none { background: var(--border); color: var(--muted); }
 .date-overdue { color: var(--hot) !important; font-weight: 600; }
 .date-today   { color: var(--warm) !important; font-weight: 600; }
@@ -113,12 +119,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .temp-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .temp-btn { padding: 10px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); transition: all 0.15s; user-select: none; min-height: var(--tap); display: flex; align-items: center; }
 .temp-btn.active { color: white; border-color: transparent; }
-.temp-btn[data-t="hot"]  { --c: var(--hot); }
-.temp-btn[data-t="warm"] { --c: var(--warm); }
-.temp-btn[data-t="cool"] { --c: var(--cool); }
-.temp-btn[data-t="cold"] { --c: var(--cold); }
-.temp-btn[data-t="dnc"]  { --c: var(--dnc); }
-.temp-btn[data-t="client"] { --c: var(--client); }
+.temp-btn[data-t="a"]  { --c: var(--t-a); }
+.temp-btn[data-t="b"]  { --c: var(--t-b); }
+.temp-btn[data-t="c1"] { --c: var(--t-c1); }
+.temp-btn[data-t="c2"] { --c: var(--t-c2); }
+.temp-btn[data-t="c3"] { --c: var(--t-c3); }
+.temp-btn[data-t="d2"] { --c: var(--t-d2); }
+.temp-btn[data-t="d1"] { --c: var(--t-d1); }
+.temp-btn[data-t="e2"] { --c: var(--t-e2); }
+.temp-btn[data-t="e1"] { --c: var(--t-e1); }
+.temp-btn[data-t="f"]  { --c: var(--t-f); }
 .temp-btn.active { background: var(--c); border-color: var(--c); }
 .ck-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
 .ck-item { display: flex; align-items: center; gap: 8px; font-size: var(--fs-base); cursor: pointer; min-height: var(--tap); }
@@ -164,9 +174,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .print-detail .pd-note { border-top: 1px solid #ddd3bc; padding-top: 5px; margin-top: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
   .print-detail .pd-note-full { grid-column: span 2; }
   .print-detail .pd-temp { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; color: white; }
-  .print-detail .pd-temp.hot { background:#d94f4f; } .print-detail .pd-temp.warm { background:#d4882a; }
-  .print-detail .pd-temp.cool { background:#3f79be; } .print-detail .pd-temp.cold { background:#7a7a99; }
-  .print-detail .pd-temp.dnc { background:#555; } .print-detail .pd-temp.client { background:#2e7d32; }
+  .print-detail .pd-temp.a { background:#2e7d32; } .print-detail .pd-temp.b { background:#d94f4f; }
+  .print-detail .pd-temp.c1 { background:#e06020; } .print-detail .pd-temp.c2 { background:#d4882a; }
+  .print-detail .pd-temp.c3 { background:#c9a84c; } .print-detail .pd-temp.d2 { background:#5a9bd5; }
+  .print-detail .pd-temp.d1 { background:#3f79be; } .print-detail .pd-temp.e2 { background:#7a8cb8; }
+  .print-detail .pd-temp.e1 { background:#7a7a99; } .print-detail .pd-temp.f { background:#555; }
   .print-detail .pd-signals { font-style: italic; color: #555; }
 }
 
@@ -476,12 +488,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       <div class="pcard-header">🌡 Lead Temperature</div>
       <div class="pcard-body">
         <div class="temp-row" id="p-temp-row">
-          <button class="temp-btn" data-t="client" onclick="setPTemp(this)">📝 Client — Under Contract</button>
-          <button class="temp-btn" data-t="hot"  onclick="setPTemp(this)">🔥 Hot — Selling within 12 mo.</button>
-          <button class="temp-btn" data-t="warm" onclick="setPTemp(this)">🟡 Warm — Open / Curious</button>
-          <button class="temp-btn" data-t="cool" onclick="setPTemp(this)">🔵 Cool — Future possible</button>
-          <button class="temp-btn" data-t="cold" onclick="setPTemp(this)">❄️ Cold — Not interested</button>
-          <button class="temp-btn" data-t="dnc"  onclick="setPTemp(this)">⛔ Do Not Contact</button>
+          <button class="temp-btn" data-t="a"  onclick="setPTemp(this)">🟢 A–Current-Clients</button>
+          <button class="temp-btn" data-t="b"  onclick="setPTemp(this)">🔥 B–Appointment</button>
+          <button class="temp-btn" data-t="c1" onclick="setPTemp(this)">🟠 C1–List-In3M</button>
+          <button class="temp-btn" data-t="c2" onclick="setPTemp(this)">🟡 C2–List-In6M</button>
+          <button class="temp-btn" data-t="c3" onclick="setPTemp(this)">🌕 C3–List-In12M</button>
+          <button class="temp-btn" data-t="d2" onclick="setPTemp(this)">📞 D2–Phone-2W</button>
+          <button class="temp-btn" data-t="d1" onclick="setPTemp(this)">📱 D1–Phone-OB</button>
+          <button class="temp-btn" data-t="e2" onclick="setPTemp(this)">📧 E2–Email-2W</button>
+          <button class="temp-btn" data-t="e1" onclick="setPTemp(this)">✉️ E1–Email-OB</button>
+          <button class="temp-btn" data-t="f"  onclick="setPTemp(this)">⛔ F–Deleted-2B</button>
         </div>
       </div>
     </div>
@@ -591,8 +607,8 @@ var panelTemp = '';
 var tempSortDir = 'desc';
 var dateSortDir = 'desc';
 
-var TEMP_LABELS = { client:'📝 Client', hot:'🔥 Hot', warm:'🟡 Warm', cool:'🔵 Cool', cold:'❄️ Cold', dnc:'⛔ DNC' };
-var TEMP_ORDER  = { client:0, hot:1, warm:2, cool:3, cold:4, dnc:5 };
+var TEMP_LABELS = { a:'🟢 A-Client', b:'🔥 B-Appt', c1:'🟠 C1-3M', c2:'🟡 C2-6M', c3:'🌕 C3-12M', d2:'📞 D2-Ph2W', d1:'📱 D1-PhOB', e2:'📧 E2-Em2W', e1:'✉️ E1-EmOB', f:'⛔ F-Del' };
+var TEMP_ORDER  = { a:0, b:1, c1:2, c2:3, c3:4, d2:5, d1:6, e2:7, e1:8, f:9 };
 var SIGNAL_LABELS = [
   'Curious about home value','Mentioned a timeframe','Asked about the market',
   'Life event (retirement/divorce)','Kids leaving home','Considering downsizing',
@@ -1189,7 +1205,9 @@ function saveSession() {
   var s = { date:document.getElementById('sess-date').value, rows:rows };
   var blob = new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'lead_followup_'+(s.date||new Date().toISOString().slice(0,10))+'.json'; a.click();
+  var now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), dd=String(now.getDate()).padStart(2,'0');
+  var currentDate = y+'-'+m+'-'+dd;
+  a.download = 'Lead_followup_'+currentDate+'.json'; a.click();
 }
 
 function loadSession(event) {
