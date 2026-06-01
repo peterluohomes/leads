@@ -129,7 +129,7 @@ body {
 }
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
-.session-field input[type="time"] { min-width: 100px; }
+.session-field input[type="time"] { min-width: 0; width: 92px; padding-left: 6px; padding-right: 4px; }
 .session-field input.street { min-width: 180px; }
 .street-select { min-height: var(--tap); width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: #fff; font-family: 'DM Mono', monospace; font-size: 14px; padding: 6px 10px; outline: none; }
 .street-select option { color: #111; }
@@ -475,7 +475,7 @@ body {
   .sess-row-2 .session-field input.street { min-width: 70px; }
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
-  .session-field input[type="time"] { min-width: 92px; }
+  .session-field input[type="time"] { min-width: 0; width: 84px; }
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
@@ -641,11 +641,11 @@ body {
       <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="5" placeholder="MM/DD" oninput="onDateDispInput()">
     </div>
     <div class="session-field">
-      <label>Start</label>
+      <label>S</label>
       <input type="time" id="sess-start" onchange="scheduleSave()">
     </div>
     <div class="session-field">
-      <label>End</label>
+      <label>E</label>
       <input type="time" id="sess-end" onchange="scheduleSave()">
     </div>
   </div>
@@ -655,7 +655,6 @@ body {
       <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
     </div>
     <div class="session-field sess-counter">
-      <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked/Total</label>
       <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
     </div>
   </div>
