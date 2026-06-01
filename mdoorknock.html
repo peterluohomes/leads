@@ -96,9 +96,17 @@ body {
 .session-bar {
   background: var(--navy2);
   padding: 10px 20px;
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 12px; flex-wrap: nowrap;
   border-bottom: 1px solid rgba(201,168,76,0.3);
 }
+.sess-row-2 { flex: 1 1 auto; min-width: 0; }
+.sess-row-2 .session-field input.street { min-width: 80px; }
+.sess-row-3 { flex: 0 0 auto; margin-left: auto; }
+.date-mmdd { width: 64px; text-align: center; }
+.hdr-streets { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
+.hdr-streets > label { font-size: var(--fs-label); font-weight: 600; color: #aaa; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+.hdr-streets .street-select { flex: 1; min-width: 120px; }
+.hdr-streets .btn { white-space: nowrap; }
 .session-field { display: flex; align-items: center; gap: 7px; }
 .session-field label {
   font-size: var(--fs-label); font-weight: 600; color: #aaa;
@@ -462,10 +470,12 @@ body {
 
   #rec-btn { padding: 9px 16px !important; font-size: 13px !important; }
 
-  .session-bar { padding: 10px 16px; gap: 10px; }
+  .session-bar { padding: 10px 16px; gap: 8px; flex-wrap: nowrap; }
+  .date-mmdd { width: 58px; }
+  .sess-row-2 .session-field input.street { min-width: 70px; }
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
-  .session-field input[type="time"] { min-width: 110px; }
+  .session-field input[type="time"] { min-width: 92px; }
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
@@ -515,9 +525,11 @@ body {
     gap: 0;
   }
   .hdr-row1 {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 8px;
   }
+  .hdr-streets { order: 3; flex-basis: 100%; min-width: 0; }
+  .hdr-streets .street-select { font-size: 12px; }
   .reminder {
     font-size: 8px; padding: 5px 8px; white-space: nowrap;
     flex: 1; min-width: 0;
@@ -530,27 +542,19 @@ body {
   .weather-group input { width: 38px !important; font-size: 11px !important; padding: 3px 2px !important; }
   .header-right { width: 100%; justify-content: flex-end; }
 
-  /* session bar: 3 clean rows */
-  .session-bar { padding: 6px 10px; gap: 5px; flex-direction: column; }
-  .sess-row { width: 100%; gap: 6px; }
-
-  /* Row 1: Date + Start + End on one line */
-  .sess-row-1 { display: flex; }
-  .sess-row-1 .session-field { flex: 1; min-width: 0; }
-  .sess-row-1 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
-  .sess-row-1 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 4px; }
-
-  /* Row 2: Street + Talked/Total on one line */
-  .sess-row-2 { display: flex; }
-  .sess-row-2 .session-field { min-width: 0; }
-  .sess-row-2 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
-  .sess-row-2 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 6px; }
+  /* session bar: fields on a wrapping line, toolbar on its own line (≈2 lines) */
+  .session-bar { padding: 6px 10px; gap: 6px; flex-direction: row; flex-wrap: wrap; }
+  .sess-row { width: auto; gap: 6px; }
+  .sess-row-1, .sess-row-2 { flex: 1 1 auto; min-width: 0; }
+  .sess-row-1 .session-field, .sess-row-2 .session-field { min-width: 0; }
+  .sess-row-1 .session-field label, .sess-row-2 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
+  .sess-row-1 .session-field input, .sess-row-2 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 4px; }
+  .date-mmdd { width: 46px !important; }
+  .sess-row-2 .session-field input.street { min-width: 64px; }
   .sess-row-2 .sess-counter { flex-shrink: 0; }
   .sess-row-2 .sess-counter label { font-size: 9px; }
-  .sess-row-2 #contact-counter { font-size: 15px; padding: 5px 8px; min-height: 36px; }
-
-  /* Row 3: toolbar buttons spread evenly */
-  .sess-row-3 { display: flex; }
+  .sess-row-2 #contact-counter { font-size: 14px; padding: 5px 8px; min-height: 34px; }
+  .sess-row-3 { flex: 0 0 100%; width: 100%; margin-left: 0; }
   .toolbar-btns { width: 100%; margin-left: 0; display: flex; flex-wrap: nowrap; gap: 0; }
   .toolbar-btns .btn { flex: 1; justify-content: center; font-size: 11px; padding: 7px 4px; min-height: 36px; border-radius: 0; }
   .toolbar-btns .btn:first-of-type { border-radius: 6px 0 0 6px; }
@@ -600,6 +604,12 @@ body {
       Tonality · Facial Expression · Body Language
       <span>Stay present. Be genuine. Listen first.</span>
     </div>
+    <div class="hdr-streets">
+      <label>Saved St.</label>
+      <select id="session-select" class="street-select" onchange="switchSession(this.value)"></select>
+      <button class="btn btn-outline" onclick="newSession()">＋ New St.</button>
+      <button class="btn btn-outline" onclick="deleteSession()">🗑 Delete</button>
+    </div>
     <div class="hdr-controls">
       <button id="rec-btn" onclick="toggleRecording()" title="Record voice note" style="
         display:flex;align-items:center;gap:7px;
@@ -618,40 +628,17 @@ body {
         <span id="rec-label">Record</span>
       </button>
       <span id="rec-timer" style="font-family:'DM Mono',monospace;font-size:12px;color:#aaa;min-width:40px;display:none;">0:00</span>
-      <div class="weather-group">
-        <div style="display:flex;align-items:center;gap:5px;">
-          <select id="sess-weather" onchange="scheduleSave()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 9px;outline:none;">
-            <option value="">Weather</option>
-            <option>☀️ Sunny</option>
-            <option>⛅ Partly Cloudy</option>
-            <option>☁️ Overcast</option>
-            <option>🌬️ Windy</option>
-            <option>🌧️ Light Rain</option>
-            <option>❄️ Light Snow</option>
-          </select>
-          <input type="number" id="sess-temp" oninput="scheduleSave()" style="width:56px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Mono',monospace;font-size:13px;padding:5px 6px;outline:none;text-align:center;" placeholder="°C">
-        </div>
-      </div>
     </div>
   </div>
 </div>
 
 <!-- ══════════ SESSION META BAR ══════════ -->
 <div class="session-bar">
-  <div class="sess-row sess-row-streets">
-    <div class="session-field" style="flex:1;">
-      <label>Saved Streets</label>
-      <select id="session-select" class="street-select" onchange="switchSession(this.value)"></select>
-    </div>
-    <div class="toolbar-btns" style="align-self:flex-end;">
-      <button class="btn btn-outline" onclick="newSession()">＋ New Street</button>
-      <button class="btn btn-outline" onclick="deleteSession()">🗑 Delete</button>
-    </div>
-  </div>
   <div class="sess-row sess-row-1">
     <div class="session-field">
       <label>Date</label>
-      <input type="date" id="sess-date" onchange="scheduleSave()">
+      <input type="hidden" id="sess-date">
+      <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="5" placeholder="MM/DD" oninput="onDateDispInput()">
     </div>
     <div class="session-field">
       <label>Start</label>
@@ -1022,6 +1009,31 @@ function flushSaveSync() {
   }
 }
 
+// Compact MM/DD date proxy over a hidden full-ISO date (year kept for storage & filenames)
+function pad2(x){ return String(x).padStart(2,'0'); }
+function isoToMMDD(iso){
+  if(!iso) return '';
+  const p = String(iso).split('-');
+  return (p.length>=3) ? (pad2(p[1].slice(-2)) + '/' + pad2(p[2].slice(0,2))) : '';
+}
+function setSessDate(iso){
+  const h = document.getElementById('sess-date');
+  const d = document.getElementById('sess-date-disp');
+  if(h) h.value = iso || '';
+  if(d) d.value = isoToMMDD(iso);
+}
+function onDateDispInput(){
+  const d = document.getElementById('sess-date-disp');
+  const h = document.getElementById('sess-date');
+  let digits = (d.value||'').replace(/\D/g,'').slice(0,4);
+  d.value = (digits.length>=3) ? (digits.slice(0,2) + '/' + digits.slice(2)) : digits;
+  if(digits.length===4){
+    const yr = (h && h.value && h.value.slice(0,4)) || String(new Date().getFullYear());
+    if(h) h.value = yr + '-' + digits.slice(0,2) + '-' + digits.slice(2,4);
+  }
+  scheduleSave();
+}
+
 function getSessionData() {
   const cleanRows = rows.map(r => {
     const {sffx, ...rest} = r;
@@ -1032,8 +1044,6 @@ function getSessionData() {
     start: document.getElementById('sess-start').value,
     end: document.getElementById('sess-end').value,
     street: document.getElementById('sess-street').value,
-    weather: document.getElementById('sess-weather').value,
-    tempC: document.getElementById('sess-temp').value,
     rows: cleanRows,
     savedAt: new Date().toISOString()
   };
@@ -1083,12 +1093,10 @@ async function loadFromDB() {
     const session = await dbGet(sessKey(curSessionId));
     if (!session || !Array.isArray(session.rows) || session.rows.length === 0) return false;
 
-    if (session.date)    document.getElementById('sess-date').value    = session.date;
+    if (session.date)    setSessDate(session.date);
     if (session.start)   document.getElementById('sess-start').value   = session.start;
     if (session.end)     document.getElementById('sess-end').value     = session.end;
     if (session.street)  document.getElementById('sess-street').value  = session.street;
-    if (session.weather) document.getElementById('sess-weather').value = session.weather;
-    if (session.tempC)   document.getElementById('sess-temp').value    = session.tempC;
 
     rows = session.rows.map(r => {
       const {sffx, ...rest} = r;
@@ -1108,13 +1116,11 @@ function resetUIBlank() {
   for (let i = 0; i < 10; i++) rows.push(makeRow());
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
-  document.getElementById('sess-date').value = `${y}-${m}-${d}`;
+  setSessDate(`${y}-${m}-${d}`);
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('sess-start').value = `${hh}:${mm}`;
   document.getElementById('sess-end').value = '';
   document.getElementById('sess-street').value = '';
-  document.getElementById('sess-weather').value = '';
-  document.getElementById('sess-temp').value = '';
   sortDir = 0;
   const si = document.getElementById('sort-icon'); if (si){ si.textContent = '\u21C5'; si.style.opacity = '0.6'; }
   render();
@@ -1124,12 +1130,10 @@ function resetUIBlank() {
 async function loadCurrentSession() {
   const session = await dbGet(sessKey(curSessionId));
   if (session && Array.isArray(session.rows) && session.rows.length) {
-    document.getElementById('sess-date').value    = session.date    || '';
+    setSessDate(session.date    || '');
     document.getElementById('sess-start').value   = session.start   || '';
     document.getElementById('sess-end').value     = session.end     || '';
     document.getElementById('sess-street').value  = session.street  || '';
-    document.getElementById('sess-weather').value = session.weather || '';
-    document.getElementById('sess-temp').value    = session.tempC   || '';
     rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest}; });
     sortDir = 0;
     const si = document.getElementById('sort-icon'); if (si){ si.textContent = '\u21C5'; si.style.opacity = '0.6'; }
@@ -1605,11 +1609,9 @@ function saveSession() {
   const blob = new Blob([JSON.stringify(session, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  const streetVal = (session.street||'').trim();
-  const st = streetVal
-    ? streetVal.replace(/\s+/g,'_')
-    : (session.date || new Date().toISOString().slice(0,10));
-  a.download = `DK_${st}.json`;
+  const streetVal = ((session.street||'').trim().replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'')) || 'street';
+  const dateVal = session.date || new Date().toISOString().slice(0,10);
+  a.download = `DK_${streetVal}_${dateVal}.json`;
   a.click();
 }
 
@@ -1623,12 +1625,10 @@ function loadSession(event) {
   reader.onload = function(e) {
     try {
       const session = JSON.parse(e.target.result);
-      if (session.date)    document.getElementById('sess-date').value    = session.date;
+      if (session.date)    setSessDate(session.date);
       if (session.start)   document.getElementById('sess-start').value   = session.start;
       if (session.end)     document.getElementById('sess-end').value     = session.end;
       if (session.street)  document.getElementById('sess-street').value  = session.street;
-      if (session.weather) document.getElementById('sess-weather').value = session.weather;
-      if (session.tempC)   document.getElementById('sess-temp').value    = session.tempC;
       if (Array.isArray(session.rows)) {
         rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest, talked: false}; });
         render();
@@ -1652,7 +1652,7 @@ function loadSession(event) {
   // Set defaults first
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
-  document.getElementById('sess-date').value = `${y}-${m}-${d}`;
+  setSessDate(`${y}-${m}-${d}`);
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('sess-start').value = `${hh}:${mm}`;
 
@@ -1689,6 +1689,8 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 let isRecording = false;
+let recStartedAt = null;   // clock time when recording began
+let recStnum = '';         // street number of the row in focus when recording began
 
 function toggleRecording() {
   isRecording ? stopRecording() : startRecording();
@@ -1703,6 +1705,9 @@ async function startRecording() {
     mediaRecorder.onstop = handleRecordingStop;
     mediaRecorder.start();
     isRecording = true;
+    recStartedAt = new Date();
+    // remember which house we're recording on (the row whose detail panel is open)
+    recStnum = (activeRowIdx !== null && rows[activeRowIdx]) ? (rows[activeRowIdx].stnum || '') : '';
 
     // UI → recording state
     const btn = document.getElementById('rec-btn');
@@ -1750,10 +1755,15 @@ function handleRecordingStop() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const dateStr = document.getElementById('sess-date').value || new Date().toISOString().slice(0,10);
-  const street = (document.getElementById('sess-street').value || 'note').replace(/[^a-z0-9]/gi,'_').slice(0,20);
-  const timeStr = formatRecTime(recSeconds).replace(':','m') + 's';
-  a.download = `dk_voice_${dateStr}_${street}_${timeStr}.${ext}`;
+  // address = street number (of the row in focus) + street name
+  const num = (recStnum || '').replace(/[^a-z0-9]/gi, '');
+  const street = (document.getElementById('sess-street').value || '').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+  const addr = [num, street].filter(Boolean).join('_') || 'note';
+  // date (from the session) + clock time the recording started
+  const when = recStartedAt || new Date();
+  const dateStr = document.getElementById('sess-date').value || when.toISOString().slice(0,10);
+  const timeStr = pad2(when.getHours()) + pad2(when.getMinutes());
+  a.download = `${addr}_${dateStr}_${timeStr}.${ext}`;
   a.click();
   URL.revokeObjectURL(url);
 }
