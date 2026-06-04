@@ -1091,7 +1091,7 @@ function newSession() {
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
   document.getElementById('sess-date').value = `${y}-${m}-${d}`;
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('sess-start').value = `${hh}:${mm}`;
+  document.getElementById('sess-start').value = '';
   document.getElementById('sess-end').value = '';
   document.getElementById('sess-street').value = '';
   document.getElementById('sess-weather').value = '';
@@ -1214,8 +1214,30 @@ function updateCounter() {
   document.getElementById('contact-counter').textContent = talked + '/' + rows.length;
 }
 
+function markActivity() {
+  // Whenever any record on the street changes, stamp the session window:
+  //   Date  = the day a change happened (today)
+  //   Start = the time of the FIRST change that day
+  //   End   = the time of the LAST change so far
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+  const today = `${y}-${m}-${d}`;
+  const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const dateEl  = document.getElementById('sess-date');
+  const startEl = document.getElementById('sess-start');
+  const endEl   = document.getElementById('sess-end');
+  if (dateEl.value !== today) {     // first change of a new day -> start the window fresh
+    dateEl.value = today;
+    startEl.value = hhmm;
+  } else if (!startEl.value) {      // first change today
+    startEl.value = hhmm;
+  }
+  endEl.value = hhmm;               // last change so far
+}
+
 function markTalked(i) {
   rows[i].talked = true;
+  markActivity();
   updateCounter();
   scheduleSave();
 }
@@ -1385,6 +1407,7 @@ function saveDetail() {
   rows[activeRowIdx].talked = true;
   // also sync temp back to row
   if (panelTemp) rows[activeRowIdx].temp = panelTemp;
+  markActivity();
   closePanel();
   render();
   scheduleSave();
@@ -1546,7 +1569,7 @@ function loadSession(event) {
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
   document.getElementById('sess-date').value = `${y}-${m}-${d}`;
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('sess-start').value = `${hh}:${mm}`;
+  document.getElementById('sess-start').value = '';
 
   // Try to open IndexedDB and restore previous session
   let restored = false;
