@@ -12,7 +12,7 @@
   --cream: #faf6ee; --cream2: #f0e8d5;
   --border: #ddd3bc; --text: #2c2c2c; --muted: #888;
   --hot: #d94f4f; --warm: #d4882a; --cool: #3f79be; --cold: #7a7a99; --dnc: #555; --client: #2e7d32;
-  --t-a: #2e7d32; --t-b: #d94f4f; --t-c1: #e06020; --t-c2: #d4882a; --t-c3: #c9a84c;
+  --t-a: #2e7d32; --t-b: #d94f4f; --t-c1: #e06020; --t-c2: #d4882a; --t-c3: #c9a84c; --t-c4: #b89a2e;
   --t-d2: #5a9bd5; --t-d1: #3f79be; --t-e2: #7a8cb8; --t-e1: #7a7a99; --t-f: #555;
   --row-even: #fffdf8; --row-odd: #f5f0e6;
   --panel-w: 680px; --tap: 44px; --row-h: 48px;
@@ -75,6 +75,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .temp-pill.c1 { background: var(--t-c1); }
 .temp-pill.c2 { background: var(--t-c2); }
 .temp-pill.c3 { background: var(--t-c3); }
+.temp-pill.c4 { background: var(--t-c4); }
 .temp-pill.d2 { background: var(--t-d2); }
 .temp-pill.d1 { background: var(--t-d1); }
 .temp-pill.e2 { background: var(--t-e2); }
@@ -124,6 +125,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .temp-btn[data-t="c1"] { --c: var(--t-c1); }
 .temp-btn[data-t="c2"] { --c: var(--t-c2); }
 .temp-btn[data-t="c3"] { --c: var(--t-c3); }
+.temp-btn[data-t="c4"] { --c: var(--t-c4); }
 .temp-btn[data-t="d2"] { --c: var(--t-d2); }
 .temp-btn[data-t="d1"] { --c: var(--t-d1); }
 .temp-btn[data-t="e2"] { --c: var(--t-e2); }
@@ -365,12 +367,53 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     -webkit-tap-highlight-color: transparent;
   }
   .phone-popup-cancel:active { background: var(--rule); }
+
+/* Due-reminder banner */
+.due-banner { background: var(--navy2); border-bottom: 3px solid var(--gold); color: var(--cream); padding: 12px 28px; display: none; }
+.due-banner.show { display: block; }
+.due-banner-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.due-banner-title { font-weight: 700; color: var(--gold2); font-size: 14px; letter-spacing: 0.3px; }
+.due-banner-actions { margin-left: auto; display: flex; gap: 8px; }
+.due-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold2); border-radius: 5px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.due-btn:hover { background: var(--gold); color: var(--navy); }
+.due-list { display: flex; flex-direction: column; gap: 5px; }
+.due-item { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(201,168,76,0.25); border-radius: 5px; padding: 7px 12px; cursor: pointer; font-size: 13px; }
+.due-item:hover { background: rgba(201,168,76,0.18); }
+.due-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.due-date { font-family: 'DM Mono', monospace; min-width: 92px; }
+.due-name { font-weight: 600; }
+.due-meta { color: #bdbdbd; margin-left: auto; font-size: 12px; text-align: right; }
+@media (max-width: 700px) { .due-banner { padding: 10px 14px; } .due-meta { display: none; } .due-banner-title { font-size: 13px; } }
+
+/* Conversation history log */
+.conv-history-wrap { margin-top: 10px; }
+.conv-history-title { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.conv-history { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.conv-entry { background: var(--cream2); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 4px; padding: 7px 26px 7px 10px; font-size: 13px; position: relative; }
+.conv-entry-ts { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 600; margin-bottom: 3px; display: block; }
+.conv-entry-note { white-space: pre-wrap; color: var(--text); }
+.conv-entry-del { position: absolute; top: 5px; right: 6px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px; }
+.conv-entry-del:hover { color: var(--hot); }
+.conv-empty { font-size: 12px; color: var(--muted); font-style: italic; }
+.pd-hist-item { font-size: 12px; margin: 2px 0; }
+.pd-hist-ts { color: var(--gold); font-family: 'DM Mono', monospace; }
 </style>
 </head>
 <body>
 
 <div class="page-header">
   <div class="reminder">Lead Follow-Up Tracker<span>Pinnacle Listing System · Peter Luo</span></div>
+</div>
+
+<div class="due-banner" id="dueBanner">
+  <div class="due-banner-head">
+    <span class="due-banner-title" id="dueBannerTitle"></span>
+    <div class="due-banner-actions">
+      <button class="due-btn" id="dueAlertBtn" onclick="enableDesktopAlerts()">🔔 Enable desktop alerts</button>
+      <button class="due-btn" id="dueDismissBtn" onclick="dismissDueBanner()">✕ Dismiss</button>
+    </div>
+  </div>
+  <div class="due-list" id="dueList"></div>
 </div>
 
 <div class="session-bar">
@@ -493,6 +536,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           <button class="temp-btn" data-t="c1" onclick="setPTemp(this)">🟠 C1–List-In3M</button>
           <button class="temp-btn" data-t="c2" onclick="setPTemp(this)">🟡 C2–List-In6M</button>
           <button class="temp-btn" data-t="c3" onclick="setPTemp(this)">🌕 C3–List-In12M</button>
+          <button class="temp-btn" data-t="c4" onclick="setPTemp(this)">🌗 C4–List-In24M</button>
           <button class="temp-btn" data-t="d2" onclick="setPTemp(this)">📞 D2–Phone-2W</button>
           <button class="temp-btn" data-t="d1" onclick="setPTemp(this)">📱 D1–Phone-OB</button>
           <button class="temp-btn" data-t="e2" onclick="setPTemp(this)">📧 E2–Email-2W</button>
@@ -514,6 +558,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="pf"><label>Personal Details to Remember</label><textarea id="p-personal" style="min-height:48px"></textarea></div>
         <div class="pdiv"></div>
         <div class="pf"><label>Neighbour Referrals Mentioned</label><input type="text" id="p-referrals"></div>
+        <div class="pdiv"></div>
+        <div class="pf">
+          <label>Log a Conversation <span style="color:var(--muted);font-weight:400;">— saved with a date &amp; time stamp when you press Save</span></label>
+          <textarea id="p-newnote" placeholder="What was discussed this time? On Save this becomes a timestamped history entry." style="min-height:54px"></textarea>
+        </div>
+        <div class="conv-history-wrap">
+          <div class="conv-history-title">Conversation History</div>
+          <div id="p-history" class="conv-history"></div>
+        </div>
       </div>
     </div>
     <div class="pcard">
@@ -540,19 +593,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           <div class="pf"><label>Follow-Up Time</label>
             <select id="p-futime">
               <option value="">—</option>
-              <option>8:00 AM</option><option>8:30 AM</option>
-              <option>9:00 AM</option><option>9:30 AM</option>
-              <option>10:00 AM</option><option>10:30 AM</option>
-              <option>11:00 AM</option><option>11:30 AM</option>
-              <option>12:00 PM</option><option>12:30 PM</option>
-              <option>1:00 PM</option><option>1:30 PM</option>
-              <option>2:00 PM</option><option>2:30 PM</option>
-              <option>3:00 PM</option><option>3:30 PM</option>
-              <option>4:00 PM</option><option>4:30 PM</option>
-              <option>5:00 PM</option><option>5:30 PM</option>
-              <option>6:00 PM</option><option>6:30 PM</option>
-              <option>7:00 PM</option><option>7:30 PM</option>
-              <option>8:00 PM</option><option>8:30 PM</option>
+              <option>8:00 AM</option><option>8:15 AM</option><option>8:30 AM</option><option>8:45 AM</option>
+              <option>9:00 AM</option><option>9:15 AM</option><option>9:30 AM</option><option>9:45 AM</option>
+              <option>10:00 AM</option><option>10:15 AM</option><option>10:30 AM</option><option>10:45 AM</option>
+              <option>11:00 AM</option><option>11:15 AM</option><option>11:30 AM</option><option>11:45 AM</option>
+              <option>12:00 PM</option><option>12:15 PM</option><option>12:30 PM</option><option>12:45 PM</option>
+              <option>1:00 PM</option><option>1:15 PM</option><option>1:30 PM</option><option>1:45 PM</option>
+              <option>2:00 PM</option><option>2:15 PM</option><option>2:30 PM</option><option>2:45 PM</option>
+              <option>3:00 PM</option><option>3:15 PM</option><option>3:30 PM</option><option>3:45 PM</option>
+              <option>4:00 PM</option><option>4:15 PM</option><option>4:30 PM</option><option>4:45 PM</option>
+              <option>5:00 PM</option><option>5:15 PM</option><option>5:30 PM</option><option>5:45 PM</option>
+              <option>6:00 PM</option><option>6:15 PM</option><option>6:30 PM</option><option>6:45 PM</option>
+              <option>7:00 PM</option><option>7:15 PM</option><option>7:30 PM</option><option>7:45 PM</option>
+              <option>8:00 PM</option><option>8:15 PM</option><option>8:30 PM</option><option>8:45 PM</option>
               <option>9:00 PM</option>
             </select>
           </div>
@@ -607,8 +660,8 @@ var panelTemp = '';
 var tempSortDir = 'desc';
 var dateSortDir = 'desc';
 
-var TEMP_LABELS = { a:'🟢 A-Client', b:'🔥 B-Appt', c1:'🟠 C1-3M', c2:'🟡 C2-6M', c3:'🌕 C3-12M', d2:'📞 D2-Ph2W', d1:'📱 D1-PhOB', e2:'📧 E2-Em2W', e1:'✉️ E1-EmOB', f:'⛔ F-Del' };
-var TEMP_ORDER  = { a:0, b:1, c1:2, c2:3, c3:4, d2:5, d1:6, e2:7, e1:8, f:9 };
+var TEMP_LABELS = { a:'🟢 A-Client', b:'🔥 B-Appt', c1:'🟠 C1-3M', c2:'🟡 C2-6M', c3:'🌕 C3-12M', c4:'🌗 C4-24M', d2:'📞 D2-Ph2W', d1:'📱 D1-PhOB', e2:'📧 E2-Em2W', e1:'✉️ E1-EmOB', f:'⛔ F-Del' };
+var TEMP_ORDER  = { a:0, b:1, c1:2, c2:3, c3:4, c4:5, d2:6, d1:7, e2:8, e1:9, f:10 };
 var SIGNAL_LABELS = [
   'Curious about home value','Mentioned a timeframe','Asked about the market',
   'Life event (retirement/divorce)','Kids leaving home','Considering downsizing',
@@ -911,6 +964,7 @@ function render() {
   updateCounter();
   // Re-apply search filter if active
   if (searchActive && document.getElementById('searchInput').value) doSearch();
+  renderDueBanner();
 }
 
 function addRow() {
@@ -963,6 +1017,34 @@ function addFromFollowUp(event) {
 // ─────────────────────────────────────────
 // PANEL
 // ─────────────────────────────────────────
+var convHistory = [];
+
+function fmtHistTs(iso) {
+  var dt = new Date(iso);
+  if (isNaN(dt.getTime())) return iso || '';
+  var p = function(n){ return String(n).padStart(2,'0'); };
+  return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())+'  '+p(dt.getHours())+':'+p(dt.getMinutes());
+}
+
+function renderHistory() {
+  var box = document.getElementById('p-history');
+  if (!box) return;
+  if (!convHistory.length) { box.innerHTML = '<div class="conv-empty">No conversations logged yet.</div>'; return; }
+  box.innerHTML = convHistory.map(function(h, i){
+    return '<div class="conv-entry">'
+      + '<button class="conv-entry-del" title="Delete this entry" onclick="deleteHistory('+i+')">&times;</button>'
+      + '<span class="conv-entry-ts">'+esc(fmtHistTs(h.t))+'</span>'
+      + '<span class="conv-entry-note">'+esc(h.note||'')+'</span>'
+      + '</div>';
+  }).join('');
+}
+
+function deleteHistory(i) {
+  if (i < 0 || i >= convHistory.length) return;
+  convHistory.splice(i, 1);
+  renderHistory();   // takes effect permanently when you press Save
+}
+
 function openPanel(idx) {
   activeRowIdx = idx;
   var r = rows[idx], d = r.detail || {};
@@ -979,6 +1061,9 @@ function openPanel(idx) {
   document.querySelectorAll('#p-signals input').forEach(function(cb,i){ cb.checked = sigs.indexOf(i)>=0; });
   panelStarVal = d.stars || 0;
   document.querySelectorAll('#p-stars .star').forEach(function(s){ s.classList.toggle('on', parseInt(s.dataset.v)<=panelStarVal); });
+  convHistory = (d.history || []).slice();
+  var nnEl = document.getElementById('p-newnote'); if (nnEl) nnEl.value = '';
+  renderHistory();
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1020,6 +1105,9 @@ function saveDetail() {
     fumethod:document.getElementById('p-fumethod').value, promised:document.getElementById('p-promised').value,
     hook:document.getElementById('p-hook').value, stars:panelStarVal
   };
+  var newNote = (document.getElementById('p-newnote').value || '').trim();
+  if (newNote) convHistory.unshift({ t: new Date().toISOString(), note: newNote });
+  d.history = convHistory;
   rows[activeRowIdx].detail = d;
   rows[activeRowIdx].talked = true;
   if (d.address) rows[activeRowIdx].address = d.address;
@@ -1057,6 +1145,7 @@ function buildDetailBlock(r) {
     (d.personal?'<div class="pd-note-full">'+f('Personal Notes',d.personal)+'</div>':'')+
     (sigs?'<div class="pd-note-full">'+f('Signals','<span class="pd-signals">'+sigs+'</span>')+'</div>':'')+
     (d.referrals?'<div class="pd-note-full">'+f('Referrals',d.referrals)+'</div>':'')+
+    ((d.history&&d.history.length)?'<div class="pd-note-full"><span class="pd-label">Conversation History:</span><div class="pd-history">'+d.history.map(function(h){return '<div class="pd-hist-item"><span class="pd-hist-ts">'+esc(fmtHistTs(h.t))+'</span> &mdash; '+esc(h.note||'')+'</div>';}).join('')+'</div></div>':'')+
     '</div>';
 }
 
@@ -1112,9 +1201,9 @@ function setReminder() {
   var startH = String(hours).padStart(2, '0');
   var startM = String(minutes).padStart(2, '0');
 
-  // End time = start + 30 minutes
+  // End time = start + 15 minutes
   var endHours = hours;
-  var endMinutes = minutes + 30;
+  var endMinutes = minutes + 15;
   if (endMinutes >= 60) { endHours++; endMinutes -= 60; }
   var endH = String(endHours).padStart(2, '0');
   var endM = String(endMinutes).padStart(2, '0');
@@ -1319,6 +1408,140 @@ function doSearch() {
 }
 
 // ─────────────────────────────────────────
+// DUE REMINDERS  (in-page banner + desktop notifications)
+//   Window: overdue + today + next 2 days
+// ─────────────────────────────────────────
+var bannerDismissed = false;
+var lastDueSig = null;
+var notifyTimer = null;
+var lastNotifiedCount = -1;
+
+function getDueLeads() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var maxd = new Date(today); maxd.setDate(maxd.getDate() + 2);
+  var out = [];
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (!r.fudate) continue;
+    if (!(r.address || r.name)) continue;
+    var dt = new Date(r.fudate + 'T00:00:00');
+    if (isNaN(dt.getTime())) continue;
+    if (dt > maxd) continue;
+    var bucket = dt < today ? 'overdue' : (dt.getTime() === today.getTime() ? 'today' : 'soon');
+    out.push({ idx: i, r: r, dt: dt, bucket: bucket });
+  }
+  out.sort(function(a, b){ return a.dt - b.dt; });
+  return out;
+}
+
+function renderDueBanner() {
+  var banner = document.getElementById('dueBanner');
+  if (!banner) return;
+  var due = getDueLeads();
+  var sig = due.map(function(x){ return x.idx + ':' + x.r.fudate + ':' + x.bucket; }).join('|');
+
+  // keep the "enable alerts" button state current
+  var ab = document.getElementById('dueAlertBtn');
+  if (ab) {
+    if (!('Notification' in window) || Notification.permission === 'granted') ab.style.display = 'none';
+    else ab.style.display = '';
+  }
+
+  if (sig === lastDueSig) return;   // nothing changed; avoid rebuild/thrash
+  lastDueSig = sig;
+
+  var list = document.getElementById('dueList');
+  if (due.length === 0 || bannerDismissed) {
+    banner.classList.remove('show');
+    if (due.length === 0) { list.innerHTML = ''; bannerDismissed = false; }  // reset dismiss once cleared
+    return;
+  }
+
+  var today = new Date(); today.setHours(0,0,0,0);
+  var nOver = 0, nToday = 0, nSoon = 0;
+  list.innerHTML = '';
+  due.forEach(function(x){
+    if (x.bucket === 'overdue') nOver++; else if (x.bucket === 'today') nToday++; else nSoon++;
+    var dot = x.bucket === 'overdue' ? 'var(--hot)' : (x.bucket === 'today' ? 'var(--warm)' : 'var(--gold)');
+    var tag;
+    if (x.bucket === 'overdue') { var od = Math.round((today - x.dt) / 86400000); tag = 'OVERDUE' + (od > 0 ? ' ' + od + 'd' : ''); }
+    else if (x.bucket === 'today') tag = 'TODAY';
+    else { var dd = Math.round((x.dt - today) / 86400000); tag = 'in ' + dd + 'd'; }
+    var nm = x.r.name || x.r.address || '(unnamed lead)';
+    var meta = [];
+    if (x.r.futime) meta.push(x.r.futime);
+    if (x.r.fumethod) meta.push(x.r.fumethod);
+    meta.push(tag);
+    var div = document.createElement('div');
+    div.className = 'due-item';
+    div.onclick = (function(idx){ return function(){ openPanel(idx); }; })(x.idx);
+    div.innerHTML = '<span class="due-dot" style="background:' + dot + '"></span>'
+      + '<span class="due-date">' + esc(x.r.fudate) + '</span>'
+      + '<span class="due-name">' + esc(nm) + '</span>'
+      + '<span class="due-meta">' + esc(meta.join(' · ')) + '</span>';
+    list.appendChild(div);
+  });
+  var parts = [];
+  if (nOver) parts.push(nOver + ' overdue');
+  if (nToday) parts.push(nToday + ' today');
+  if (nSoon) parts.push(nSoon + ' coming up');
+  document.getElementById('dueBannerTitle').textContent = '🔔 Follow-ups needing attention — ' + parts.join(', ');
+  banner.classList.add('show');
+}
+
+function dismissDueBanner() {
+  bannerDismissed = true;
+  document.getElementById('dueBanner').classList.remove('show');
+}
+
+function enableDesktopAlerts() {
+  if (!('Notification' in window)) { alert('This browser does not support desktop notifications.'); return; }
+  Notification.requestPermission().then(function(p){
+    if (p === 'granted') {
+      var ab = document.getElementById('dueAlertBtn'); if (ab) ab.style.display = 'none';
+      startNotifyLoop();
+      notifyDue(true);
+    }
+  });
+}
+
+function notifyDue(force) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  var due = getDueLeads();
+  var n = due.length;
+  if (n === 0) { lastNotifiedCount = 0; return; }
+  if (!force && n === lastNotifiedCount) return;   // only re-fire when the count changes
+  lastNotifiedCount = n;
+  var over = due.filter(function(x){ return x.bucket === 'overdue'; }).length;
+  var tod  = due.filter(function(x){ return x.bucket === 'today'; }).length;
+  var soon = n - over - tod;
+  var b = [];
+  if (over) b.push(over + ' overdue');
+  if (tod)  b.push(tod + ' due today');
+  if (soon) b.push(soon + ' coming up');
+  try {
+    var notif = new Notification('Lead Follow-Ups', {
+      body: b.join(', ') + ' — open your tracker to follow up.',
+      tag: 'followup-due'   // replaces any previous one instead of stacking
+    });
+    notif.onclick = function(){ window.focus(); notif.close(); };
+  } catch (e) { /* notifications blocked or unsupported */ }
+}
+
+function startNotifyLoop() {
+  if (notifyTimer) return;
+  notifyTimer = setInterval(function(){ notifyDue(false); }, 15 * 60 * 1000); // re-check every 15 min while open
+}
+
+function initReminders() {
+  renderDueBanner();
+  if ('Notification' in window && Notification.permission === 'granted') {
+    startNotifyLoop();
+    notifyDue(true);
+  }
+}
+
+// ─────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────
 (function(){
@@ -1331,6 +1554,7 @@ function doSearch() {
       for(var i=0;i<10;i++) rows.push(makeRow());
       render();
     }
+    initReminders();
   });
 
   var resizeTimer;
