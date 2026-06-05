@@ -102,7 +102,7 @@ body {
 .sess-row-2 { flex: 1 1 auto; min-width: 0; }
 .sess-row-2 .session-field input.street { min-width: 80px; }
 .sess-row-3 { flex: 0 0 auto; margin-left: auto; }
-.date-mmdd { width: 90px; text-align: center; }
+.date-mmdd { width: 130px; text-align: center; }
 .hdr-streets { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
 .hdr-streets > label { font-size: var(--fs-label); font-weight: 600; color: #aaa; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
 .hdr-streets .street-select { flex: 1; min-width: 120px; }
@@ -471,7 +471,7 @@ body {
   #rec-btn { padding: 9px 16px !important; font-size: 13px !important; }
 
   .session-bar { padding: 10px 16px; gap: 8px; flex-wrap: nowrap; }
-  .date-mmdd { width: 58px; }
+  .date-mmdd { width: 120px; }
   .sess-row-2 .session-field input.street { min-width: 70px; }
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
@@ -549,7 +549,7 @@ body {
   .sess-row-1 .session-field, .sess-row-2 .session-field { min-width: 0; }
   .sess-row-1 .session-field label, .sess-row-2 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
   .sess-row-1 .session-field input, .sess-row-2 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 4px; }
-  .date-mmdd { width: 46px !important; }
+  .date-mmdd { width: 110px !important; }
   .sess-row-2 .session-field input.street { min-width: 64px; }
   .sess-row-2 .sess-counter { flex-shrink: 0; }
   .sess-row-2 .sess-counter label { font-size: 9px; }
@@ -665,7 +665,7 @@ body {
   <div class="sess-row sess-row-1">
     <div class="session-field">
       <input type="hidden" id="sess-date">
-      <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="5" placeholder="MM/DD" oninput="onDateDispInput()">
+      <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="10" placeholder="MM/DD/YYYY" oninput="onDateDispInput()">
     </div>
     <div class="session-field">
       <input type="time" id="sess-start" onchange="scheduleSave()">
@@ -1051,12 +1051,12 @@ function flushSaveSync() {
   }
 }
 
-// Compact MM/DD date proxy over a hidden full-ISO date (year kept for storage & filenames)
+// MM/DD/YYYY display proxy over a hidden full-ISO date (ISO kept for storage & filenames)
 function pad2(x){ return String(x).padStart(2,'0'); }
 function isoToMMDD(iso){
   if(!iso) return '';
   const p = String(iso).split('-');
-  return (p.length>=3) ? (pad2(p[1].slice(-2)) + '/' + pad2(p[2].slice(0,2))) : '';
+  return (p.length>=3) ? (pad2(p[1].slice(-2)) + '/' + pad2(p[2].slice(0,2)) + '/' + p[0]) : '';
 }
 function setSessDate(iso){
   const h = document.getElementById('sess-date');
@@ -1067,11 +1067,14 @@ function setSessDate(iso){
 function onDateDispInput(){
   const d = document.getElementById('sess-date-disp');
   const h = document.getElementById('sess-date');
-  let digits = (d.value||'').replace(/\D/g,'').slice(0,4);
-  d.value = (digits.length>=3) ? (digits.slice(0,2) + '/' + digits.slice(2)) : digits;
-  if(digits.length===4){
-    const yr = (h && h.value && h.value.slice(0,4)) || String(new Date().getFullYear());
-    if(h) h.value = yr + '-' + digits.slice(0,2) + '-' + digits.slice(2,4);
+  let digits = (d.value||'').replace(/\D/g,'').slice(0,8);   // MMDDYYYY
+  let out = digits.slice(0,2);
+  if(digits.length>=3) out += '/' + digits.slice(2,4);
+  if(digits.length>=5) out += '/' + digits.slice(4,8);
+  d.value = out;
+  if(digits.length===8){
+    const mm = digits.slice(0,2), dd = digits.slice(2,4), yy = digits.slice(4,8);
+    if(h) h.value = yy + '-' + mm + '-' + dd;
   }
   scheduleSave();
 }
