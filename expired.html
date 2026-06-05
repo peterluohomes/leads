@@ -19,7 +19,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); font-size: var(--fs-base); overscroll-behavior-y: none; }
 
-.page-header { background: var(--navy); border-bottom: 3px solid var(--gold); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.page-header { background: var(--navy); border-bottom: 3px solid var(--gold); padding: 14px 28px; display: flex; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 8px; overflow-x: auto; }
 .reminder { background: rgba(201,168,76,0.15); border: 1px solid var(--gold); border-radius: 5px; padding: 8px 14px; text-align: center; color: var(--gold2); font-size: var(--fs-label); font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; }
 .reminder span { display: block; font-size: 10px; font-weight: 400; color: #aaa; margin-top: 2px; }
 
@@ -278,40 +278,77 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .ck-grid { grid-template-columns: 1fr; }
   .temp-pill { font-size:10px; padding:2px 7px; }
 }
+
+/* Conversation history log */
+.conv-history-wrap{margin-top:10px;}
+.conv-history-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.conv-history{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
+.conv-entry{background:var(--cream2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:4px;padding:7px 26px 7px 10px;font-size:13px;position:relative;}
+.conv-entry-ts{font-family:'DM Mono',monospace;font-size:11px;color:#9a7d1f;font-weight:600;margin-bottom:3px;display:block;}
+.conv-entry-note{white-space:pre-wrap;color:var(--text);}
+.conv-entry-del{position:absolute;top:5px;right:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px;}
+.conv-entry-del:hover{color:var(--hot);}
+.conv-empty{font-size:12px;color:var(--muted);font-style:italic;}
+/* Due-reminder banner */
+.due-banner{background:var(--navy2);border-bottom:3px solid var(--gold);color:var(--cream);padding:12px 28px;display:none;}
+.due-banner.show{display:block;}
+.due-banner-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+.due-banner-title{font-weight:700;color:var(--gold2);font-size:14px;letter-spacing:.3px;}
+.due-banner-actions{margin-left:auto;display:flex;gap:8px;}
+.due-btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:5px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.due-btn:hover{background:var(--gold);color:var(--navy);}
+.due-list{display:flex;flex-direction:column;gap:5px;}
+.due-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.25);border-radius:5px;padding:7px 12px;cursor:pointer;font-size:13px;}
+.due-item:hover{background:rgba(201,168,76,0.18);}
+.due-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.due-date{font-family:'DM Mono',monospace;min-width:92px;}
+.due-name{font-weight:600;}
+.due-meta{color:#cdbf93;margin-left:auto;font-size:12px;text-align:right;}
+@media(max-width:700px){.due-banner{padding:10px 14px;}.due-meta{display:none;}.due-banner-title{font-size:13px;}}
+@media print{.due-banner{display:none!important;}}
+
+/* keep the top bar on a single row */
+.page-header .reminder{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;}
+.page-header .session-field{flex-shrink:0;}
+.page-header .session-field input{min-width:104px;}
+.page-header .sess-field-counter{flex-shrink:0;}
+.page-header .toolbar-btns{flex-wrap:nowrap;flex-shrink:0;gap:6px;}
+.page-header .toolbar-btns .btn{padding:8px 11px;font-size:11px;gap:4px;white-space:nowrap;}
+.page-header #autosave-status{display:none;}
 </style>
 </head>
 <body>
 
 <div class="page-header">
-  <div class="reminder">Expired Listing Follow Up<span>Pinnacle Listing System · Peter Luo</span></div>
+  <div class="reminder">Expired Listing Follow Up</div>
+  <div class="session-field">
+    <input type="date" id="sess-date" onchange="scheduleSave()">
+  </div>
+  <div class="sess-field-counter" style="display:flex;align-items:center;gap:7px;">
+    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+  </div>
+  <div class="toolbar-btns">
+    <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
+    <button class="btn btn-outline" onclick="addRow()">+ Row</button>
+    <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
+    <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
+    <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
+    <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
+    <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
+    <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
+    <button class="btn btn-outline" onclick="exportLeadFollowup()">📤 Export</button>
+  </div>
 </div>
 
-<div class="session-bar">
-  <div class="sess-row sess-row-1">
-    <div class="session-field">
-      <label>Date</label>
-      <input type="date" id="sess-date" onchange="scheduleSave()">
-    </div>
-    <div class="sess-field-counter" style="display:flex;align-items:center;gap:7px;">
-      <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
-      <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
-    </div>
-    <button class="btn btn-primary sess-print-btn" onclick="window.print()">🖨 Print</button>
-  </div>
-  <div class="sess-row sess-row-2">
-    <div class="toolbar-btns">
-      <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
-      <button class="btn btn-outline" onclick="addRow()">+ Row</button>
-      <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
-      <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
-      <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
-      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
-      <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
-      <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
-      <button class="btn btn-outline" onclick="exportLeadFollowup()">📤 Export</button>
-      <button class="btn btn-primary sess-print-desktop" onclick="window.print()">🖨 Print</button>
+<div class="due-banner" id="dueBanner">
+  <div class="due-banner-head">
+    <span class="due-banner-title" id="dueBannerTitle"></span>
+    <div class="due-banner-actions">
+      <button class="due-btn" id="dueAlertBtn" onclick="enableDesktopAlerts()">🔔 Enable desktop alerts</button>
+      <button class="due-btn" id="dueDismissBtn" onclick="dismissDueBanner()">✕ Dismiss</button>
     </div>
   </div>
+  <div class="due-list" id="dueList"></div>
 </div>
 
 <div class="col-headers">
@@ -410,6 +447,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="pf"><label>Personal Details to Remember</label><textarea id="p-personal" style="min-height:48px"></textarea></div>
         <div class="pdiv"></div>
         <div class="pf"><label>Neighbour Referrals Mentioned</label><input type="text" id="p-referrals"></div>
+        <div class="pdiv"></div>
+        <div class="pf">
+          <label>Log a Conversation <span style="color:var(--muted);font-weight:400;">— saved with a date &amp; time stamp when you press Save</span></label>
+          <textarea id="p-newnote" placeholder="What was discussed this time? On Save this becomes a timestamped history entry." style="min-height:54px"></textarea>
+        </div>
+        <div class="conv-history-wrap">
+          <div class="conv-history-title">Conversation History</div>
+          <div id="p-history" class="conv-history"></div>
+        </div>
       </div>
     </div>
     <div class="pcard">
@@ -673,6 +719,73 @@ function markTalked(i) {
   scheduleSave();
 }
 
+// ─── Conversation history + due reminders ───
+var convHistory = [];
+function fmtHistTs(iso){ var dt=new Date(iso); if(isNaN(dt.getTime()))return iso||''; var p=function(n){return String(n).padStart(2,'0');}; return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())+'  '+p(dt.getHours())+':'+p(dt.getMinutes()); }
+function renderHistory(){ var box=document.getElementById('p-history'); if(!box)return; if(!convHistory.length){box.innerHTML='<div class="conv-empty">No conversations logged yet.</div>';return;} box.innerHTML=convHistory.map(function(h,i){ return '<div class="conv-entry"><button class="conv-entry-del" title="Delete this entry" onclick="deleteHistory('+i+')">&times;</button><span class="conv-entry-ts">'+esc(fmtHistTs(h.t))+'</span><span class="conv-entry-note">'+esc(h.note||'')+'</span></div>'; }).join(''); }
+function deleteHistory(i){ if(i<0||i>=convHistory.length)return; convHistory.splice(i,1); renderHistory(); }
+
+var bannerDismissed=false, lastDueSig=null, notifyTimer=null, lastNotifiedCount=-1;
+function getDueLeads(){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var maxd=new Date(today); maxd.setDate(maxd.getDate()+2);
+  var out=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i]; if(!r.fudate) continue; if(!(r.address||r.name)) continue;
+    var dt=new Date(r.fudate+'T00:00:00'); if(isNaN(dt.getTime())) continue;
+    if(dt>maxd) continue;
+    var bucket = dt<today?'overdue':(dt.getTime()===today.getTime()?'today':'soon');
+    out.push({idx:i, dt:dt, bucket:bucket, fudate:r.fudate, futime:r.futime, fumethod:r.fumethod, name:(r.name||r.address||'(lead)')});
+  }
+  out.sort(function(a,b){return a.dt-b.dt;});
+  return out;
+}
+function renderDueBanner(){
+  var banner=document.getElementById('dueBanner'); if(!banner)return;
+  var due=getDueLeads();
+  var sig=due.map(function(x){return x.idx+':'+x.fudate+':'+x.bucket;}).join('|');
+  var ab=document.getElementById('dueAlertBtn');
+  if(ab){ if(!('Notification' in window)||Notification.permission==='granted') ab.style.display='none'; else ab.style.display=''; }
+  if(sig===lastDueSig) return;
+  lastDueSig=sig;
+  var list=document.getElementById('dueList');
+  if(due.length===0||bannerDismissed){ banner.classList.remove('show'); if(due.length===0){list.innerHTML=''; bannerDismissed=false;} return; }
+  var today=new Date(); today.setHours(0,0,0,0);
+  var nOver=0,nToday=0,nSoon=0; list.innerHTML='';
+  due.forEach(function(x){
+    if(x.bucket==='overdue')nOver++; else if(x.bucket==='today')nToday++; else nSoon++;
+    var dot=x.bucket==='overdue'?'var(--hot)':(x.bucket==='today'?'var(--warm)':'var(--gold)');
+    var tag; if(x.bucket==='overdue'){var od=Math.round((today-x.dt)/86400000);tag='OVERDUE'+(od>0?' '+od+'d':'');} else if(x.bucket==='today')tag='TODAY'; else {var dd=Math.round((x.dt-today)/86400000);tag='in '+dd+'d';}
+    var meta=[]; if(x.futime)meta.push(x.futime); if(x.fumethod)meta.push(x.fumethod); meta.push(tag);
+    var div=document.createElement('div'); div.className='due-item';
+    div.onclick=(function(idx){return function(){openPanel(idx);};})(x.idx);
+    div.innerHTML='<span class="due-dot" style="background:'+dot+'"></span><span class="due-date">'+esc(x.fudate)+'</span><span class="due-name">'+esc(x.name)+'</span><span class="due-meta">'+esc(meta.join(' · '))+'</span>';
+    list.appendChild(div);
+  });
+  var parts=[]; if(nOver)parts.push(nOver+' overdue'); if(nToday)parts.push(nToday+' today'); if(nSoon)parts.push(nSoon+' coming up');
+  document.getElementById('dueBannerTitle').textContent='🔔 Follow-ups needing attention — '+parts.join(', ');
+  banner.classList.add('show');
+}
+function dismissDueBanner(){ bannerDismissed=true; document.getElementById('dueBanner').classList.remove('show'); }
+function enableDesktopAlerts(){
+  if(!('Notification' in window)){ alert('This browser does not support desktop notifications.'); return; }
+  Notification.requestPermission().then(function(p){ if(p==='granted'){ var ab=document.getElementById('dueAlertBtn'); if(ab)ab.style.display='none'; startNotifyLoop(); notifyDue(true); } });
+}
+function notifyDue(force){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  var due=getDueLeads(), n=due.length;
+  if(n===0){lastNotifiedCount=0;return;}
+  if(!force && n===lastNotifiedCount)return;
+  lastNotifiedCount=n;
+  var over=due.filter(function(x){return x.bucket==='overdue';}).length;
+  var tod=due.filter(function(x){return x.bucket==='today';}).length;
+  var soon=n-over-tod; var b=[];
+  if(over)b.push(over+' overdue'); if(tod)b.push(tod+' due today'); if(soon)b.push(soon+' coming up');
+  try{ var notif=new Notification('Expired-Listing Follow-Ups',{body:b.join(', ')+' — open your tracker to follow up.',tag:'exp-followup-due'}); notif.onclick=function(){window.focus();notif.close();}; }catch(e){}
+}
+function startNotifyLoop(){ if(notifyTimer)return; notifyTimer=setInterval(function(){notifyDue(false);}, 15*60*1000); }
+function initReminders(){ renderDueBanner(); if('Notification' in window && Notification.permission==='granted'){ startNotifyLoop(); notifyDue(true); } }
+
 function render() {
   var c = document.getElementById('rows-container');
   c.innerHTML = '';
@@ -759,6 +872,7 @@ function render() {
     }
   });
   updateCounter();
+  renderDueBanner();
 }
 
 function addRow() {
@@ -838,6 +952,9 @@ function openPanel(idx) {
   document.querySelectorAll('#p-signals input').forEach(function(cb,i){ cb.checked = sigs.indexOf(i)>=0; });
   panelStarVal = d.stars || 0;
   document.querySelectorAll('#p-stars .star').forEach(function(s){ s.classList.toggle('on', parseInt(s.dataset.v)<=panelStarVal); });
+  convHistory = (d.history || []).slice();
+  var nnEl = document.getElementById('p-newnote'); if (nnEl) nnEl.value = '';
+  renderHistory();
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -879,6 +996,9 @@ function saveDetail() {
     fumethod:document.getElementById('p-fumethod').value, promised:document.getElementById('p-promised').value,
     hook:document.getElementById('p-hook').value, stars:panelStarVal
   };
+  var newNote = (document.getElementById('p-newnote').value || '').trim();
+  if (newNote) convHistory.unshift({ t: new Date().toISOString(), note: newNote });
+  d.history = convHistory;
   rows[activeRowIdx].detail = d;
   rows[activeRowIdx].talked = true;
   if (d.address) rows[activeRowIdx].address = d.address;
@@ -912,6 +1032,7 @@ function buildDetailBlock(r) {
     (d.personal?'<div class="pd-note-full">'+f('Personal Notes',d.personal)+'</div>':'')+
     (sigs?'<div class="pd-note-full">'+f('Signals','<span class="pd-signals">'+sigs+'</span>')+'</div>':'')+
     (d.referrals?'<div class="pd-note-full">'+f('Referrals',d.referrals)+'</div>':'')+
+    ((d.history&&d.history.length)?'<div class="pd-note-full"><span class="pd-label">Conversation History:</span><div>'+d.history.map(function(h){return '<div style="font-size:12px;margin:2px 0;"><span style="color:#c9a84c;font-family:\'DM Mono\',monospace;">'+esc(fmtHistTs(h.t))+'</span> &mdash; '+esc(h.note||'')+'</div>';}).join('')+'</div></div>':'')+
     '</div>';
 }
 
@@ -1334,6 +1455,7 @@ function addRowWithPropDetail() {
       for(var i=0;i<10;i++) rows.push(makeRow());
       render();
     }
+    initReminders();
   });
   var resizeTimer;
   window.addEventListener('resize', function(){ clearTimeout(resizeTimer); resizeTimer=setTimeout(render,150); });
