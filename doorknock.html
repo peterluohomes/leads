@@ -96,9 +96,17 @@ body {
 .session-bar {
   background: var(--navy2);
   padding: 10px 20px;
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 12px; flex-wrap: nowrap;
   border-bottom: 1px solid rgba(201,168,76,0.3);
 }
+.sess-row-2 { flex: 1 1 auto; min-width: 0; }
+.sess-row-2 .session-field input.street { min-width: 80px; }
+.sess-row-3 { flex: 0 0 auto; margin-left: auto; }
+.date-mmdd { width: 64px; text-align: center; }
+.hdr-streets { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
+.hdr-streets > label { font-size: var(--fs-label); font-weight: 600; color: #aaa; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+.hdr-streets .street-select { flex: 1; min-width: 120px; }
+.hdr-streets .btn { white-space: nowrap; }
 .session-field { display: flex; align-items: center; gap: 7px; }
 .session-field label {
   font-size: var(--fs-label); font-weight: 600; color: #aaa;
@@ -121,8 +129,10 @@ body {
 }
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
-.session-field input[type="time"] { min-width: 100px; }
+.session-field input[type="time"] { min-width: 0; width: 78px; padding-left: 4px; padding-right: 2px; }
 .session-field input.street { min-width: 180px; }
+.street-select { min-height: var(--tap); width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: #fff; font-family: 'DM Mono', monospace; font-size: 14px; padding: 6px 10px; outline: none; }
+.street-select option { color: #111; }
 .sess-row { display: flex; align-items: center; gap: 14px; }
 
 .toolbar-btns { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -460,10 +470,12 @@ body {
 
   #rec-btn { padding: 9px 16px !important; font-size: 13px !important; }
 
-  .session-bar { padding: 10px 16px; gap: 10px; }
+  .session-bar { padding: 10px 16px; gap: 8px; flex-wrap: nowrap; }
+  .date-mmdd { width: 58px; }
+  .sess-row-2 .session-field input.street { min-width: 70px; }
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
-  .session-field input[type="time"] { min-width: 110px; }
+  .session-field input[type="time"] { min-width: 0; width: 72px; }
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
@@ -513,9 +525,11 @@ body {
     gap: 0;
   }
   .hdr-row1 {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 8px;
   }
+  .hdr-streets { order: 3; flex-basis: 100%; min-width: 0; }
+  .hdr-streets .street-select { font-size: 12px; }
   .reminder {
     font-size: 8px; padding: 5px 8px; white-space: nowrap;
     flex: 1; min-width: 0;
@@ -528,27 +542,19 @@ body {
   .weather-group input { width: 38px !important; font-size: 11px !important; padding: 3px 2px !important; }
   .header-right { width: 100%; justify-content: flex-end; }
 
-  /* session bar: 3 clean rows */
-  .session-bar { padding: 6px 10px; gap: 5px; flex-direction: column; }
-  .sess-row { width: 100%; gap: 6px; }
-
-  /* Row 1: Date + Start + End on one line */
-  .sess-row-1 { display: flex; }
-  .sess-row-1 .session-field { flex: 1; min-width: 0; }
-  .sess-row-1 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
-  .sess-row-1 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 4px; }
-
-  /* Row 2: Street + Talked/Total on one line */
-  .sess-row-2 { display: flex; }
-  .sess-row-2 .session-field { min-width: 0; }
-  .sess-row-2 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
-  .sess-row-2 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 6px; }
+  /* session bar: fields on a wrapping line, toolbar on its own line (≈2 lines) */
+  .session-bar { padding: 6px 10px; gap: 6px; flex-direction: row; flex-wrap: wrap; }
+  .sess-row { width: auto; gap: 6px; }
+  .sess-row-1, .sess-row-2 { flex: 1 1 auto; min-width: 0; }
+  .sess-row-1 .session-field, .sess-row-2 .session-field { min-width: 0; }
+  .sess-row-1 .session-field label, .sess-row-2 .session-field label { font-size: 9px; letter-spacing: 0.5px; }
+  .sess-row-1 .session-field input, .sess-row-2 .session-field input { min-width: unset; width: 100%; font-size: 13px; padding: 6px 4px; }
+  .date-mmdd { width: 46px !important; }
+  .sess-row-2 .session-field input.street { min-width: 64px; }
   .sess-row-2 .sess-counter { flex-shrink: 0; }
   .sess-row-2 .sess-counter label { font-size: 9px; }
-  .sess-row-2 #contact-counter { font-size: 15px; padding: 5px 8px; min-height: 36px; }
-
-  /* Row 3: toolbar buttons spread evenly */
-  .sess-row-3 { display: flex; }
+  .sess-row-2 #contact-counter { font-size: 14px; padding: 5px 8px; min-height: 34px; }
+  .sess-row-3 { flex: 0 0 100%; width: 100%; margin-left: 0; }
   .toolbar-btns { width: 100%; margin-left: 0; display: flex; flex-wrap: nowrap; gap: 0; }
   .toolbar-btns .btn { flex: 1; justify-content: center; font-size: 11px; padding: 7px 4px; min-height: 36px; border-radius: 0; }
   .toolbar-btns .btn:first-of-type { border-radius: 6px 0 0 6px; }
@@ -587,6 +593,34 @@ body {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(1.3); }
 }
+
+/* Conversation history log */
+.conv-history-wrap{margin-top:10px;}
+.conv-history-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.conv-history{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
+.conv-entry{background:var(--cream2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:4px;padding:7px 26px 7px 10px;font-size:13px;position:relative;}
+.conv-entry-ts{font-family:'DM Mono',monospace;font-size:11px;color:#9a7d1f;font-weight:600;margin-bottom:3px;display:block;}
+.conv-entry-note{white-space:pre-wrap;color:var(--text);}
+.conv-entry-del{position:absolute;top:5px;right:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px;}
+.conv-entry-del:hover{color:var(--hot);}
+.conv-empty{font-size:12px;color:var(--muted);font-style:italic;}
+/* Due-reminder banner */
+.due-banner{background:var(--navy2);border-bottom:3px solid var(--gold);color:var(--cream);padding:12px 28px;display:none;}
+.due-banner.show{display:block;}
+.due-banner-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+.due-banner-title{font-weight:700;color:var(--gold2);font-size:14px;letter-spacing:.3px;}
+.due-banner-actions{margin-left:auto;display:flex;gap:8px;}
+.due-btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:5px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.due-btn:hover{background:var(--gold);color:var(--navy);}
+.due-list{display:flex;flex-direction:column;gap:5px;}
+.due-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.25);border-radius:5px;padding:7px 12px;cursor:pointer;font-size:13px;}
+.due-item:hover{background:rgba(201,168,76,0.18);}
+.due-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.due-date{font-family:'DM Mono',monospace;min-width:92px;}
+.due-name{font-weight:600;}
+.due-meta{color:#cdbf93;margin-left:auto;font-size:12px;text-align:right;}
+@media(max-width:700px){.due-banner{padding:10px 14px;}.due-meta{display:none;}.due-banner-title{font-size:13px;}}
+@media print{.due-banner{display:none!important;}}
 </style>
 </head>
 <body>
@@ -597,6 +631,12 @@ body {
     <div class="reminder">
       Tonality · Facial Expression · Body Language
       <span>Stay present. Be genuine. Listen first.</span>
+    </div>
+    <div class="hdr-streets">
+      <label>Saved St.</label>
+      <select id="session-select" class="street-select" onchange="switchSession(this.value)"></select>
+      <button class="btn btn-outline" onclick="newSession()">＋ New St.</button>
+      <button class="btn btn-outline" onclick="deleteSession()">🗑 Delete</button>
     </div>
     <div class="hdr-controls">
       <button id="rec-btn" onclick="toggleRecording()" title="Record voice note" style="
@@ -616,20 +656,6 @@ body {
         <span id="rec-label">Record</span>
       </button>
       <span id="rec-timer" style="font-family:'DM Mono',monospace;font-size:12px;color:#aaa;min-width:40px;display:none;">0:00</span>
-      <div class="weather-group">
-        <div style="display:flex;align-items:center;gap:5px;">
-          <select id="sess-weather" onchange="scheduleSave()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 9px;outline:none;">
-            <option value="">Weather</option>
-            <option>☀️ Sunny</option>
-            <option>⛅ Partly Cloudy</option>
-            <option>☁️ Overcast</option>
-            <option>🌬️ Windy</option>
-            <option>🌧️ Light Rain</option>
-            <option>❄️ Light Snow</option>
-          </select>
-          <input type="number" id="sess-temp" oninput="scheduleSave()" style="width:56px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:4px;color:white;font-family:'DM Mono',monospace;font-size:13px;padding:5px 6px;outline:none;text-align:center;" placeholder="°C">
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -639,24 +665,22 @@ body {
   <div class="sess-row sess-row-1">
     <div class="session-field">
       <label>Date</label>
-      <input type="date" id="sess-date" onchange="scheduleSave()">
+      <input type="hidden" id="sess-date">
+      <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="5" placeholder="MM/DD" oninput="onDateDispInput()">
     </div>
     <div class="session-field">
-      <label>Start</label>
       <input type="time" id="sess-start" onchange="scheduleSave()">
     </div>
     <div class="session-field">
-      <label>End</label>
       <input type="time" id="sess-end" onchange="scheduleSave()">
     </div>
   </div>
   <div class="sess-row sess-row-2">
     <div class="session-field" style="flex:1;">
       <label>Street</label>
-      <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="scheduleSave()">
+      <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
     </div>
     <div class="session-field sess-counter">
-      <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked/Total</label>
       <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
     </div>
   </div>
@@ -664,13 +688,23 @@ body {
     <div class="toolbar-btns">
       <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
       <button class="btn btn-outline" onclick="addRow()">+ Row</button>
-      <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
       <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
       <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
       <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
       <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
     </div>
   </div>
+</div>
+
+<div class="due-banner" id="dueBanner">
+  <div class="due-banner-head">
+    <span class="due-banner-title" id="dueBannerTitle"></span>
+    <div class="due-banner-actions">
+      <button class="due-btn" id="dueAlertBtn" onclick="enableDesktopAlerts()">🔔 Enable desktop alerts</button>
+      <button class="due-btn" id="dueDismissBtn" onclick="dismissDueBanner()">✕ Dismiss</button>
+    </div>
+  </div>
+  <div class="due-list" id="dueList"></div>
 </div>
 
 <!-- ══════════ COLUMN HEADERS ══════════ -->
@@ -781,6 +815,15 @@ body {
         <div class="pf"><label>Personal Details to Remember</label><textarea id="p-personal" style="min-height:48px"></textarea></div>
         <div class="pdiv"></div>
         <div class="pf"><label>Neighbour Referrals Mentioned</label><input type="text" id="p-referrals"></div>
+        <div class="pdiv"></div>
+        <div class="pf">
+          <label>Log a Conversation <span style="color:var(--muted);font-weight:400;">— saved with a date &amp; time stamp when you press Save</span></label>
+          <textarea id="p-newnote" placeholder="What was discussed this time? On Save this becomes a timestamped history entry." style="min-height:54px"></textarea>
+        </div>
+        <div class="conv-history-wrap">
+          <div class="conv-history-title">Conversation History</div>
+          <div id="p-history" class="conv-history"></div>
+        </div>
       </div>
     </div>
 
@@ -899,7 +942,16 @@ const GENDERS = ['—','Male','Female','Couple','Other'];
 const DB_NAME = 'PinnacleDoorKnock';
 const DB_VERSION = 1;
 const STORE_NAME = 'sessions';
-const SESSION_KEY = 'current';
+const SESSION_KEY = 'current';          // legacy single-session key (used once for migration)
+const INDEX_KEY   = '__sessions_index';  // array of {id, name} — one per street
+const CURRENT_KEY = '__current_session'; // id of the street currently open
+let sessionIndex = [];
+let curSessionId = null;
+function sessKey(id){ return 'sess:' + id; }
+function genId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+async function loadIndex(){ const v = await dbGet(INDEX_KEY); sessionIndex = Array.isArray(v) ? v : []; return sessionIndex; }
+async function saveIndex(){ await dbPut(INDEX_KEY, sessionIndex); }
+async function setCurrent(id){ curSessionId = id; await dbPut(CURRENT_KEY, id); }
 let db = null;
 let dbReady = false;
 let saveTimer = null;
@@ -994,12 +1046,37 @@ function flushSaveSync() {
   try {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
-    store.put(getSessionData(), SESSION_KEY);
+    store.put(getSessionData(), sessKey(curSessionId));
     // We can't await here, but the transaction is queued
     savePending = false;
   } catch(err) {
     console.warn('Sync flush failed:', err);
   }
+}
+
+// Compact MM/DD date proxy over a hidden full-ISO date (year kept for storage & filenames)
+function pad2(x){ return String(x).padStart(2,'0'); }
+function isoToMMDD(iso){
+  if(!iso) return '';
+  const p = String(iso).split('-');
+  return (p.length>=3) ? (pad2(p[1].slice(-2)) + '/' + pad2(p[2].slice(0,2))) : '';
+}
+function setSessDate(iso){
+  const h = document.getElementById('sess-date');
+  const d = document.getElementById('sess-date-disp');
+  if(h) h.value = iso || '';
+  if(d) d.value = isoToMMDD(iso);
+}
+function onDateDispInput(){
+  const d = document.getElementById('sess-date-disp');
+  const h = document.getElementById('sess-date');
+  let digits = (d.value||'').replace(/\D/g,'').slice(0,4);
+  d.value = (digits.length>=3) ? (digits.slice(0,2) + '/' + digits.slice(2)) : digits;
+  if(digits.length===4){
+    const yr = (h && h.value && h.value.slice(0,4)) || String(new Date().getFullYear());
+    if(h) h.value = yr + '-' + digits.slice(0,2) + '-' + digits.slice(2,4);
+  }
+  scheduleSave();
 }
 
 function getSessionData() {
@@ -1012,8 +1089,6 @@ function getSessionData() {
     start: document.getElementById('sess-start').value,
     end: document.getElementById('sess-end').value,
     street: document.getElementById('sess-street').value,
-    weather: document.getElementById('sess-weather').value,
-    tempC: document.getElementById('sess-temp').value,
     rows: cleanRows,
     savedAt: new Date().toISOString()
   };
@@ -1022,7 +1097,7 @@ function getSessionData() {
 async function persistSession() {
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   try {
-    await dbPut(SESSION_KEY, getSessionData());
+    await dbPut(sessKey(curSessionId), getSessionData());
     savePending = false;
     flashSaveIndicator();
   } catch(err) {
@@ -1060,15 +1135,13 @@ window.addEventListener('pagehide', () => {
 
 async function loadFromDB() {
   try {
-    const session = await dbGet(SESSION_KEY);
+    const session = await dbGet(sessKey(curSessionId));
     if (!session || !Array.isArray(session.rows) || session.rows.length === 0) return false;
 
-    if (session.date)    document.getElementById('sess-date').value    = session.date;
+    if (session.date)    setSessDate(session.date);
     if (session.start)   document.getElementById('sess-start').value   = session.start;
     if (session.end)     document.getElementById('sess-end').value     = session.end;
     if (session.street)  document.getElementById('sess-street').value  = session.street;
-    if (session.weather) document.getElementById('sess-weather').value = session.weather;
-    if (session.tempC)   document.getElementById('sess-temp').value    = session.tempC;
 
     rows = session.rows.map(r => {
       const {sffx, ...rest} = r;
@@ -1082,25 +1155,106 @@ async function loadFromDB() {
   }
 }
 
-function newSession() {
-  if (!confirm('Start a new session? Current data is auto-saved in the browser.\n\nTip: Use 💾 Save to export a JSON backup first if needed.')) return;
+// Reset the visible form to a blank street (10 empty rows + default date/time)
+function resetUIBlank() {
   rows = [];
   for (let i = 0; i < 10; i++) rows.push(makeRow());
-  // reset meta fields
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
-  document.getElementById('sess-date').value = `${y}-${m}-${d}`;
+  setSessDate(`${y}-${m}-${d}`);
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('sess-start').value = '';
   document.getElementById('sess-end').value = '';
   document.getElementById('sess-street').value = '';
-  document.getElementById('sess-weather').value = '';
-  document.getElementById('sess-temp').value = '';
   sortDir = 0;
-  document.getElementById('sort-icon').textContent = '⇅';
-  document.getElementById('sort-icon').style.opacity = '0.6';
+  const si = document.getElementById('sort-icon'); if (si){ si.textContent = '\u21C5'; si.style.opacity = '0.6'; }
   render();
-  persistSession();
+}
+
+// Populate the form from the currently-selected street (or blank if none saved yet)
+async function loadCurrentSession() {
+  const session = await dbGet(sessKey(curSessionId));
+  if (session && Array.isArray(session.rows) && session.rows.length) {
+    setSessDate(session.date    || '');
+    document.getElementById('sess-start').value   = session.start   || '';
+    document.getElementById('sess-end').value     = session.end     || '';
+    document.getElementById('sess-street').value  = session.street  || '';
+    rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest}; });
+    sortDir = 0;
+    const si = document.getElementById('sort-icon'); if (si){ si.textContent = '\u21C5'; si.style.opacity = '0.6'; }
+    render();
+  } else {
+    resetUIBlank();
+  }
+  renderSessionSelect();
+}
+
+// Build the street dropdown from the index
+function renderSessionSelect() {
+  const sel = document.getElementById('session-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  sessionIndex.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = (s.name && s.name.trim()) ? s.name : 'Untitled street';
+    if (s.id === curSessionId) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+// Keep the dropdown label in sync as the Street field is typed
+function onStreetInput() {
+  scheduleSave();
+  const entry = sessionIndex.find(s => s.id === curSessionId);
+  if (entry) {
+    entry.name = document.getElementById('sess-street').value.trim();
+    saveIndex();
+    renderSessionSelect();
+  }
+}
+
+// Switch to another saved street (saves the current one first)
+async function switchSession(id) {
+  if (!id || id === curSessionId) return;
+  await persistSession();
+  await setCurrent(id);
+  await loadCurrentSession();
+}
+
+// Create a brand-new street log; the current one stays saved separately
+async function newSession() {
+  await persistSession();
+  const id = genId();
+  sessionIndex.push({ id, name: '' });
+  await saveIndex();
+  await setCurrent(id);
+  resetUIBlank();
+  await persistSession();
+  renderSessionSelect();
+  const stEl = document.getElementById('sess-street'); if (stEl) stEl.focus();
+}
+
+// Delete the current street's log
+async function deleteSession() {
+  const entry = sessionIndex.find(s => s.id === curSessionId);
+  const label = (entry && entry.name) ? entry.name : 'this street';
+  if (!confirm('Delete the log for "' + label + '"?\n\nThis permanently removes its saved door-knock data. Other streets are not affected.')) return;
+  await dbDelete(sessKey(curSessionId));
+  sessionIndex = sessionIndex.filter(s => s.id !== curSessionId);
+  await saveIndex();
+  if (sessionIndex.length === 0) {
+    const id = genId();
+    sessionIndex.push({ id, name: '' });
+    await saveIndex();
+    await setCurrent(id);
+    resetUIBlank();
+    await persistSession();
+  } else {
+    await setCurrent(sessionIndex[0].id);
+    await loadCurrentSession();
+  }
+  renderSessionSelect();
 }
 
 function makeRow() {
@@ -1163,6 +1317,7 @@ function buildDetailBlock(r, i) {
       ${d.personal ? `<div class="pd-note-full pd-field"><span class="pd-label">Personal Notes:</span><span class="pd-val">${d.personal}</span></div>` : ''}
       ${signals    ? `<div class="pd-note-full pd-field"><span class="pd-label">Signals:</span><span class="pd-val pd-signals">${signals}</span></div>` : ''}
       ${d.referrals? `<div class="pd-note-full pd-field"><span class="pd-label">Referrals:</span><span class="pd-val">${d.referrals}</span></div>` : ''}
+      ${(d.history&&d.history.length)? `<div class="pd-note-full pd-field"><span class="pd-label">Conversation History:</span><span class="pd-val">${d.history.map(h=>`${escH(fmtHistTs(h.t))} &mdash; ${escH(h.note||'')}`).join('<br>')}</span></div>` : ''}
     </div>
   `;
 }
@@ -1223,11 +1378,11 @@ function markActivity() {
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
   const today = `${y}-${m}-${d}`;
   const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const dateEl  = document.getElementById('sess-date');
+  const dateEl  = document.getElementById('sess-date');   // hidden ISO value
   const startEl = document.getElementById('sess-start');
   const endEl   = document.getElementById('sess-end');
   if (dateEl.value !== today) {     // first change of a new day -> start the window fresh
-    dateEl.value = today;
+    setSessDate(today);             // updates hidden value + MM/DD display
     startEl.value = hhmm;
   } else if (!startEl.value) {      // first change today
     startEl.value = hhmm;
@@ -1241,6 +1396,76 @@ function markTalked(i) {
   updateCounter();
   scheduleSave();
 }
+
+// ─── Conversation history + due reminders (shared helpers) ───
+function escH(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtHistTs(iso){ var dt=new Date(iso); if(isNaN(dt.getTime()))return iso||''; var p=function(n){return String(n).padStart(2,'0');}; return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())+'  '+p(dt.getHours())+':'+p(dt.getMinutes()); }
+
+var convHistory = [];
+function renderHistory(){ var box=document.getElementById('p-history'); if(!box)return; if(!convHistory.length){box.innerHTML='<div class="conv-empty">No conversations logged yet.</div>';return;} box.innerHTML=convHistory.map(function(h,i){ return '<div class="conv-entry"><button class="conv-entry-del" title="Delete this entry" onclick="deleteHistory('+i+')">&times;</button><span class="conv-entry-ts">'+escH(fmtHistTs(h.t))+'</span><span class="conv-entry-note">'+escH(h.note||'')+'</span></div>'; }).join(''); }
+function deleteHistory(i){ if(i<0||i>=convHistory.length)return; convHistory.splice(i,1); renderHistory(); }
+
+var bannerDismissed=false, lastDueSig=null, notifyTimer=null, lastNotifiedCount=-1;
+function getDueLeads(){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var maxd=new Date(today); maxd.setDate(maxd.getDate()+2);
+  var out=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i], d=r.detail; if(!d||!d.fudate) continue;
+    var dt=new Date(d.fudate+'T00:00:00'); if(isNaN(dt.getTime())) continue;
+    if(dt>maxd) continue;
+    var bucket = dt<today?'overdue':(dt.getTime()===today.getTime()?'today':'soon');
+    var nm=[d.fname,d.lname].filter(Boolean).join(' ') || d.address || (r.stnum?('#'+r.stnum):'') || '(lead)';
+    out.push({idx:i, dt:dt, bucket:bucket, fudate:d.fudate, futime:d.futime, fumethod:d.fumethod, name:nm});
+  }
+  out.sort(function(a,b){return a.dt-b.dt;});
+  return out;
+}
+function renderDueBanner(){
+  var banner=document.getElementById('dueBanner'); if(!banner)return;
+  var due=getDueLeads();
+  var sig=due.map(function(x){return x.idx+':'+x.fudate+':'+x.bucket;}).join('|');
+  var ab=document.getElementById('dueAlertBtn');
+  if(ab){ if(!('Notification' in window)||Notification.permission==='granted') ab.style.display='none'; else ab.style.display=''; }
+  if(sig===lastDueSig) return;
+  lastDueSig=sig;
+  var list=document.getElementById('dueList');
+  if(due.length===0||bannerDismissed){ banner.classList.remove('show'); if(due.length===0){list.innerHTML=''; bannerDismissed=false;} return; }
+  var today=new Date(); today.setHours(0,0,0,0);
+  var nOver=0,nToday=0,nSoon=0; list.innerHTML='';
+  due.forEach(function(x){
+    if(x.bucket==='overdue')nOver++; else if(x.bucket==='today')nToday++; else nSoon++;
+    var dot=x.bucket==='overdue'?'var(--hot)':(x.bucket==='today'?'var(--warm)':'var(--gold)');
+    var tag; if(x.bucket==='overdue'){var od=Math.round((today-x.dt)/86400000);tag='OVERDUE'+(od>0?' '+od+'d':'');} else if(x.bucket==='today')tag='TODAY'; else {var dd=Math.round((x.dt-today)/86400000);tag='in '+dd+'d';}
+    var meta=[]; if(x.futime)meta.push(x.futime); if(x.fumethod)meta.push(x.fumethod); meta.push(tag);
+    var div=document.createElement('div'); div.className='due-item';
+    div.onclick=(function(idx){return function(){openPanel(idx);};})(x.idx);
+    div.innerHTML='<span class="due-dot" style="background:'+dot+'"></span><span class="due-date">'+escH(x.fudate)+'</span><span class="due-name">'+escH(x.name)+'</span><span class="due-meta">'+escH(meta.join(' · '))+'</span>';
+    list.appendChild(div);
+  });
+  var parts=[]; if(nOver)parts.push(nOver+' overdue'); if(nToday)parts.push(nToday+' today'); if(nSoon)parts.push(nSoon+' coming up');
+  document.getElementById('dueBannerTitle').textContent='🔔 Follow-ups needing attention — '+parts.join(', ');
+  banner.classList.add('show');
+}
+function dismissDueBanner(){ bannerDismissed=true; document.getElementById('dueBanner').classList.remove('show'); }
+function enableDesktopAlerts(){
+  if(!('Notification' in window)){ alert('This browser does not support desktop notifications.'); return; }
+  Notification.requestPermission().then(function(p){ if(p==='granted'){ var ab=document.getElementById('dueAlertBtn'); if(ab)ab.style.display='none'; startNotifyLoop(); notifyDue(true); } });
+}
+function notifyDue(force){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  var due=getDueLeads(), n=due.length;
+  if(n===0){lastNotifiedCount=0;return;}
+  if(!force && n===lastNotifiedCount)return;
+  lastNotifiedCount=n;
+  var over=due.filter(function(x){return x.bucket==='overdue';}).length;
+  var tod=due.filter(function(x){return x.bucket==='today';}).length;
+  var soon=n-over-tod; var b=[];
+  if(over)b.push(over+' overdue'); if(tod)b.push(tod+' due today'); if(soon)b.push(soon+' coming up');
+  try{ var notif=new Notification('Door-Knock Follow-Ups',{body:b.join(', ')+' — open your tracker to follow up.',tag:'dk-followup-due'}); notif.onclick=function(){window.focus();notif.close();}; }catch(e){}
+}
+function startNotifyLoop(){ if(notifyTimer)return; notifyTimer=setInterval(function(){notifyDue(false);}, 15*60*1000); }
+function initReminders(){ renderDueBanner(); if('Notification' in window && Notification.permission==='granted'){ startNotifyLoop(); notifyDue(true); } }
 
 function render() {
   const c = document.getElementById('rows-container');
@@ -1299,6 +1524,7 @@ function render() {
   });
 
   updateCounter();
+  renderDueBanner();
 }
 
 function addRow() {
@@ -1347,6 +1573,9 @@ function openPanel(idx) {
     s.classList.toggle('on', parseInt(s.dataset.v) <= panelStarVal);
   });
 
+  convHistory = (d.history || []).slice();
+  var nnEl = document.getElementById('p-newnote'); if (nnEl) nnEl.value = '';
+  renderHistory();
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1403,6 +1632,9 @@ function saveDetail() {
     hook:     document.getElementById('p-hook').value,
     stars: panelStarVal,
   };
+  var newNote = (document.getElementById('p-newnote').value || '').trim();
+  if (newNote) convHistory.unshift({ t: new Date().toISOString(), note: newNote });
+  d.history = convHistory;
   rows[activeRowIdx].detail = d;
   rows[activeRowIdx].talked = true;
   // also sync temp back to row
@@ -1523,11 +1755,9 @@ function saveSession() {
   const blob = new Blob([JSON.stringify(session, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  const streetVal = (session.street||'').trim();
-  const st = streetVal
-    ? streetVal.replace(/\s+/g,'_')
-    : (session.date || new Date().toISOString().slice(0,10));
-  a.download = `DK_${st}.json`;
+  const streetVal = ((session.street||'').trim().replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'')) || 'street';
+  const dateVal = session.date || new Date().toISOString().slice(0,10);
+  a.download = `DK_${streetVal}_${dateVal}.json`;
   a.click();
 }
 
@@ -1541,16 +1771,17 @@ function loadSession(event) {
   reader.onload = function(e) {
     try {
       const session = JSON.parse(e.target.result);
-      if (session.date)    document.getElementById('sess-date').value    = session.date;
+      if (session.date)    setSessDate(session.date);
       if (session.start)   document.getElementById('sess-start').value   = session.start;
       if (session.end)     document.getElementById('sess-end').value     = session.end;
       if (session.street)  document.getElementById('sess-street').value  = session.street;
-      if (session.weather) document.getElementById('sess-weather').value = session.weather;
-      if (session.tempC)   document.getElementById('sess-temp').value    = session.tempC;
       if (Array.isArray(session.rows)) {
         rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest, talked: false}; });
         render();
         persistSession(); // save loaded data into IndexedDB
+        const entry = sessionIndex.find(s => s.id === curSessionId);
+        if (entry) { entry.name = (session.street||'').trim(); saveIndex(); }
+        renderSessionSelect();
       }
     } catch(err) {
       alert('Could not load file. Please make sure it is a valid session JSON.');
@@ -1567,24 +1798,34 @@ function loadSession(event) {
   // Set defaults first
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
-  document.getElementById('sess-date').value = `${y}-${m}-${d}`;
+  setSessDate(`${y}-${m}-${d}`);
   const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('sess-start').value = '';
 
-  // Try to open IndexedDB and restore previous session
-  let restored = false;
+  // Open IndexedDB, load the street index (one-time migration of any legacy session),
+  // then restore whichever street was last open.
   try {
     await openDB();
-    restored = await loadFromDB();
+    await loadIndex();
+    if (sessionIndex.length === 0) {
+      const legacy = await dbGet(SESSION_KEY); // old single-session key
+      const id = genId();
+      sessionIndex = [{ id, name: (legacy && legacy.street) ? legacy.street : '' }];
+      await saveIndex();
+      if (legacy) await dbPut(sessKey(id), legacy);   // preserve existing work as the first street
+      await setCurrent(id);
+    } else {
+      const savedCur = await dbGet(CURRENT_KEY);
+      curSessionId = (savedCur && sessionIndex.find(s => s.id === savedCur)) ? savedCur : sessionIndex[0].id;
+      await dbPut(CURRENT_KEY, curSessionId);
+    }
+    await loadCurrentSession();
   } catch(err) {
     console.warn('IndexedDB not available, using in-memory only:', err);
-  }
-
-  // If no saved session, start with 10 blank rows
-  if (!restored) {
     for (let i = 0; i < 10; i++) rows.push(makeRow());
     render();
   }
+  initReminders();
 })();
 
 // ─────────────────────────────────────────
@@ -1595,6 +1836,8 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 let isRecording = false;
+let recStartedAt = null;   // clock time when recording began
+let recStnum = '';         // street number of the row in focus when recording began
 
 function toggleRecording() {
   isRecording ? stopRecording() : startRecording();
@@ -1609,6 +1852,9 @@ async function startRecording() {
     mediaRecorder.onstop = handleRecordingStop;
     mediaRecorder.start();
     isRecording = true;
+    recStartedAt = new Date();
+    // remember which house we're recording on (the row whose detail panel is open)
+    recStnum = (activeRowIdx !== null && rows[activeRowIdx]) ? (rows[activeRowIdx].stnum || '') : '';
 
     // UI → recording state
     const btn = document.getElementById('rec-btn');
@@ -1656,10 +1902,15 @@ function handleRecordingStop() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const dateStr = document.getElementById('sess-date').value || new Date().toISOString().slice(0,10);
-  const street = (document.getElementById('sess-street').value || 'note').replace(/[^a-z0-9]/gi,'_').slice(0,20);
-  const timeStr = formatRecTime(recSeconds).replace(':','m') + 's';
-  a.download = `dk_voice_${dateStr}_${street}_${timeStr}.${ext}`;
+  // address = street number (of the row in focus) + street name
+  const num = (recStnum || '').replace(/[^a-z0-9]/gi, '');
+  const street = (document.getElementById('sess-street').value || '').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+  const addr = [num, street].filter(Boolean).join('_') || 'note';
+  // date (from the session) + clock time the recording started
+  const when = recStartedAt || new Date();
+  const dateStr = document.getElementById('sess-date').value || when.toISOString().slice(0,10);
+  const timeStr = pad2(when.getHours()) + pad2(when.getMinutes());
+  a.download = `${addr}_${dateStr}_${timeStr}.${ext}`;
   a.click();
   URL.revokeObjectURL(url);
 }
