@@ -397,6 +397,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .conv-empty { font-size: 12px; color: var(--muted); font-style: italic; }
 .pd-hist-item { font-size: 12px; margin: 2px 0; }
 .pd-hist-ts { color: var(--gold); font-family: 'DM Mono', monospace; }
+
+/* iPhone Pro Max & phones: keep title + Date + counter on ONE row; buttons wrap below */
+@media screen and (max-width: 500px) {
+  .page-header { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .page-header .reminder { width: auto; white-space: nowrap; flex: 0 0 auto; font-size: 12px; padding: 6px 9px; }
+  .page-header .session-field { flex: 0 0 auto; min-width: 0; }
+  .page-header .session-field input { min-width: 0; width: 112px; font-size: 13px; padding: 6px 6px; }
+  .page-header .sess-field-counter { flex: 0 0 auto; }
+  .page-header #contact-counter { font-size: 14px; padding: 5px 8px; min-height: 34px; }
+  .page-header .toolbar-btns { flex: 1 0 100%; width: 100%; margin-left: 0; }
+}
 </style>
 </head>
 <body>
