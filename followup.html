@@ -21,8 +21,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); font-size: var(--fs-base); overscroll-behavior-y: none; }
 
-.page-header { background: var(--navy); border-bottom: 3px solid var(--gold); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.reminder { background: rgba(201,168,76,0.15); border: 1px solid var(--gold); border-radius: 5px; padding: 8px 14px; text-align: center; color: var(--gold2); font-size: var(--fs-label); font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; }
+.page-header { background: var(--navy); border-bottom: 3px solid var(--gold); padding: 14px 28px; display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 12px; }
+.reminder { background: rgba(201,168,76,0.15); border: 1px solid var(--gold); border-radius: 5px; padding: 8px 14px; text-align: center; color: var(--gold2); font-size: 14px; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; }
 .reminder span { display: block; font-size: 10px; font-weight: 400; color: #aaa; margin-top: 2px; }
 
 .session-bar { background: var(--navy2); padding: 10px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid rgba(201,168,76,0.3); }
@@ -402,7 +402,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <body>
 
 <div class="page-header">
-  <div class="reminder">Lead Follow-Up Tracker<span>Pinnacle Listing System · Peter Luo</span></div>
+  <div class="reminder">Lead Follow-Up</div>
+  <div class="session-field">
+    <label>Date</label>
+    <input type="date" id="sess-date" onchange="scheduleSave()">
+  </div>
+  <div class="sess-field-counter" style="display:flex;align-items:center;gap:7px;">
+    <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
+    <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+  </div>
+  <div class="toolbar-btns">
+    <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
+    <button class="btn btn-outline" onclick="addRow()">+ Row</button>
+    <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
+    <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
+    <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
+    <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
+    <button class="btn btn-read" onclick="document.getElementById('read-dk-input').click()">📋 Read</button>
+    <input type="file" id="read-dk-input" accept=".json" style="display:none" onchange="readDoorKnock(event)">
+    <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
+    <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
+  </div>
 </div>
 
 <div class="due-banner" id="dueBanner">
@@ -414,35 +434,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     </div>
   </div>
   <div class="due-list" id="dueList"></div>
-</div>
-
-<div class="session-bar">
-  <div class="sess-row sess-row-1">
-    <div class="session-field">
-      <label>Date</label>
-      <input type="date" id="sess-date" onchange="scheduleSave()">
-    </div>
-    <div class="sess-field-counter" style="display:flex;align-items:center;gap:7px;">
-      <label style="font-size:var(--fs-label);font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Talked / Total</label>
-      <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
-    </div>
-    <button class="btn btn-primary sess-print-btn" onclick="window.print()">🖨 Print</button>
-  </div>
-  <div class="sess-row sess-row-2">
-    <div class="toolbar-btns">
-      <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
-      <button class="btn btn-outline" onclick="addRow()">+ Row</button>
-      <button class="btn btn-outline" onclick="newSession()">🆕 New</button>
-      <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
-      <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
-      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
-      <button class="btn btn-read" onclick="document.getElementById('read-dk-input').click()">📋 Read</button>
-      <input type="file" id="read-dk-input" accept=".json" style="display:none" onchange="readDoorKnock(event)">
-      <button class="btn btn-read" onclick="document.getElementById('add-fu-input').click()">➕ Add</button>
-      <input type="file" id="add-fu-input" accept=".json" style="display:none" onchange="addFromFollowUp(event)">
-      <button class="btn btn-primary sess-print-desktop" onclick="window.print()">🖨 Print</button>
-    </div>
-  </div>
 </div>
 
 <div class="col-headers">

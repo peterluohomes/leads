@@ -102,7 +102,7 @@ body {
 .sess-row-2 { flex: 1 1 auto; min-width: 0; }
 .sess-row-2 .session-field input.street { min-width: 80px; }
 .sess-row-3 { flex: 0 0 auto; margin-left: auto; }
-.date-mmdd { width: 64px; text-align: center; }
+.date-mmdd { width: 90px; text-align: center; }
 .hdr-streets { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
 .hdr-streets > label { font-size: var(--fs-label); font-weight: 600; color: #aaa; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
 .hdr-streets .street-select { flex: 1; min-width: 120px; }
@@ -664,7 +664,6 @@ body {
 <div class="session-bar">
   <div class="sess-row sess-row-1">
     <div class="session-field">
-      <label>Date</label>
       <input type="hidden" id="sess-date">
       <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="5" placeholder="MM/DD" oninput="onDateDispInput()">
     </div>
@@ -677,7 +676,6 @@ body {
   </div>
   <div class="sess-row sess-row-2">
     <div class="session-field" style="flex:1;">
-      <label>Street</label>
       <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
     </div>
     <div class="session-field sess-counter">
@@ -686,7 +684,6 @@ body {
   </div>
   <div class="sess-row sess-row-3">
     <div class="toolbar-btns">
-      <span id="autosave-status" style="font-family:'DM Mono',monospace;font-size:10px;color:#7c9a5e;opacity:0.4;display:flex;align-items:center;transition:opacity 0.4s;white-space:nowrap;">✓ saved</span>
       <button class="btn btn-outline" onclick="addRow()">+ Row</button>
       <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
       <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
