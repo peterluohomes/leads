@@ -1151,11 +1151,22 @@ function sortByDate() {
 
 var addrSortDir = 'asc';
 function parseStreet(addr) {
-  // Split "123 Main St, City..." -> { num: 123, name: "main st" }
+  // Goal: sort by STREET NAME (primary), then civic NUMBER (secondary).
+  // Take the street line (before first comma) and normalize.
   var street = (addr||'').split(',')[0].trim();
-  var m = street.match(/^(\d+)\s+(.+)$/);
-  if (m) return { num: parseInt(m[1], 10), name: m[2].toLowerCase() };
-  return { num: 0, name: street.toLowerCase() };
+  // Strip a leading unit/suite marker so the civic number is what we read:
+  //   "Unit 5 - 123 Main St", "#5-123 Main St", "5 - 123 Main St" -> "123 Main St"
+  street = street.replace(/^\s*(?:unit|suite|apt|apartment|ste|#)\s*[\w]+\s*[-–]\s*/i, '');
+  // Leading civic number with optional letter (12A) or range (8-10), then the street name.
+  var m = street.match(/^(\d+)([a-z])?\s*(?:[-–]\s*\d+[a-z]?\s*)?(.+)$/i);
+  if (m) {
+    return {
+      num:  parseInt(m[1], 10) || 0,
+      suf:  (m[2] || '').toLowerCase(),
+      name: (m[3] || '').trim().toLowerCase()
+    };
+  }
+  return { num: 0, suf: '', name: street.toLowerCase() };
 }
 function sortByAddress() {
   var w = rows.filter(function(r){ return r.address||r.name||r.temp||r.detail; });
@@ -1163,9 +1174,13 @@ function sortByAddress() {
   var dir = addrSortDir === 'asc' ? 1 : -1;
   w.sort(function(a,b){
     var pa = parseStreet(a.address), pb = parseStreet(b.address);
-    if (pa.name < pb.name) return -1 * dir;
-    if (pa.name > pb.name) return  1 * dir;
-    return (pa.num - pb.num) * dir;
+    // Primary: street name (case-insensitive, numeric-aware e.g. "2nd Ave" < "10th Ave")
+    var c = pa.name.localeCompare(pb.name, undefined, { sensitivity:'base', numeric:true });
+    if (c) return c * dir;
+    // Secondary: civic number
+    if (pa.num !== pb.num) return (pa.num - pb.num) * dir;
+    // Tertiary: number suffix (12A before 12B)
+    return pa.suf.localeCompare(pb.suf) * dir;
   });
   rows = w.concat(e);
   addrSortDir = addrSortDir === 'asc' ? 'desc' : 'asc';
