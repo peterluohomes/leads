@@ -1204,7 +1204,8 @@ function exportLeadFollowup() {
                 d.temp || d.fudate || d.attitude ||
                 d.moving || d.obj || d.res || d.personal ||
                 d.referrals || d.promised ||
-                (d.signals && d.signals.length) || d.stars);
+                (d.signals && d.signals.length) || d.stars ||
+                (d.history && d.history.length));
     })
     .map(function(r){
       // Build a clean detail object with exactly the lead_followup keys
@@ -1236,7 +1237,8 @@ function exportLeadFollowup() {
           fumethod:   src.fumethod   || r.fumethod|| '',
           promised:   src.promised   || '',
           hook:       src.hook       || '',
-          stars:      src.stars      || 0
+          stars:      src.stars      || 0,
+          history:    src.history    || []
         };
       }
       return {
