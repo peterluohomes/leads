@@ -635,7 +635,7 @@ body {
       <span>Stay present. Be genuine. Listen first.</span>
     </div>
     <div class="hdr-streets">
-      <label>Saved St.</label>
+      <div id="all-counter" onclick="showAllKnocks()" title="All streets — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:#cfe3ff;letter-spacing:1px;padding:5px 11px;background:rgba(255,255,255,0.05);border:1px solid rgba(120,160,210,0.4);border-radius:6px;">0/0</div>
       <select id="session-select" class="street-select" onchange="switchSession(this.value)"></select>
       <button class="btn btn-outline" onclick="newSession()">＋ New St.</button>
       <button class="btn btn-outline" onclick="deleteSession()">🗑 Delete</button>
@@ -680,15 +680,8 @@ body {
     <div class="session-field" style="flex:1;">
       <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
     </div>
-    <div class="session-field sess-counter" style="display:flex;gap:8px;align-items:flex-end;">
-      <div style="text-align:center;">
-        <div style="font-size:9px;opacity:.65;letter-spacing:1px;margin-bottom:2px;">STREET</div>
-        <div id="contact-counter" onclick="showStreetKnocks()" title="This street — tap for day/week/month/quarter/year" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:9px;opacity:.65;letter-spacing:1px;margin-bottom:2px;">ALL</div>
-        <div id="all-counter" onclick="showAllKnocks()" title="All streets — tap for day/week/month/quarter/year" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#cfe3ff;letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(120,160,210,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
-      </div>
+    <div class="session-field sess-counter">
+      <div id="contact-counter" onclick="showStreetKnocks()" title="This street — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
     </div>
   </div>
   <div class="sess-row sess-row-3">
@@ -697,8 +690,8 @@ body {
       <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
       <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
       <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
-      <button class="btn btn-outline" onclick="backupAllStreets()">💾 Backup All</button>
-      <button class="btn btn-outline" onclick="document.getElementById('restore-all-input').click()">📂 Restore All</button>
+      <button class="btn btn-outline" onclick="backupAllStreets()">💾 Backup</button>
+      <button class="btn btn-outline" onclick="document.getElementById('restore-all-input').click()">📂 Restore</button>
       <input type="file" id="restore-all-input" accept=".json" style="display:none" onchange="restoreAllStreets(event)">
     </div>
   </div>
@@ -1216,9 +1209,10 @@ async function showAllKnocks(){
 async function updateAllCounter(){
   const el = document.getElementById('all-counter'); if(!el) return;
   try{
+    const today = new Date(); today.setHours(0,0,0,0);
     const entries = await dbAllEntries();
     let knocked=0, doors=0;
-    entries.forEach(e=>{ if(String(e.key).indexOf('sess:')===0 && e.value && Array.isArray(e.value.rows)) e.value.rows.forEach(r=>{ doors++; if(parseLastKnock(r.lastknock)) knocked++; }); });
+    entries.forEach(e=>{ if(String(e.key).indexOf('sess:')===0 && e.value && Array.isArray(e.value.rows)) e.value.rows.forEach(r=>{ doors++; const d=parseLastKnock(r.lastknock); if(d && d.getTime()>=today.getTime()) knocked++; }); });
     el.textContent = knocked + '/' + doors;
   }catch(err){}
 }
@@ -1517,7 +1511,8 @@ function stampKnock(i) {
 }
 
 function updateCounter() {
-  const knocked = rows.filter(r => parseLastKnock(r.lastknock)).length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const knocked = rows.filter(r => { const d = parseLastKnock(r.lastknock); return d && d.getTime() >= today.getTime(); }).length;
   document.getElementById('contact-counter').textContent = knocked + '/' + rows.length;
 }
 
