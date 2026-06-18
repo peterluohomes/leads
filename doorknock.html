@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Door Knock Session Log — Pinnacle Listing System</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -480,6 +480,7 @@ body {
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
   .session-field input[type="time"] { min-width: 0; width: 72px; }
+  .time-stack input[type="time"] { position: relative; top: 4px; }
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
@@ -628,6 +629,11 @@ body {
 </style>
 </head>
 <body>
+<div id="sync-bar" style="display:flex;align-items:center;gap:10px;justify-content:center;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;font:13px/1.3 system-ui,-apple-system,sans-serif;background:rgba(0,0,0,.18)">
+  <button id="sync-signin" onclick="PinnacleSync && PinnacleSync.signIn()" style="border:0;border-radius:8px;padding:6px 12px;background:#1a73e8;color:#fff;font-weight:600;cursor:pointer">Sign in to sync</button>
+  <button id="sync-refresh" onclick="PinnacleSync_refresh()" style="display:none;border:0;border-radius:8px;padding:6px 12px;background:#c9a84c;color:#1a2b4a;font-weight:700;cursor:pointer">New data — tap to refresh</button>
+  <span id="sync-status" style="opacity:.7">Not signed in</span>
+</div>
 
 <!-- ══════════ PAGE HEADER ══════════ -->
 <div class="page-header">
@@ -1216,6 +1222,58 @@ async function updateAllCounter(){
     el.textContent = knocked + '/' + doors;
   }catch(err){}
 }
+
+// ─────────────────────────────────────────
+// CLOUD SYNC (works with /firebase-sync.js)
+// Snapshots the entire street store (index + current + every street).
+// ─────────────────────────────────────────
+const dbPutRaw = dbPut, dbDeleteRaw = dbDelete;
+let __syncSuppress = false, __syncNotifyTimer = null;
+function __syncTs(s){ return s ? (Date.parse(s)||0) : 0; }
+function __syncStamp(key){
+  if(__syncSuppress) return;
+  if(key === CURRENT_KEY || key === '__syncSavedAt') return;   // street switching / internal -> don't trigger a push
+  dbPutRaw('__syncSavedAt', new Date().toISOString());
+  clearTimeout(__syncNotifyTimer);
+  __syncNotifyTimer = setTimeout(()=>{ if(window.PinnacleSync) PinnacleSync.notifyChanged(); }, 800);
+}
+dbPut    = function(key, value){ return dbPutRaw(key, value).then(r=>{ __syncStamp(key); return r; }); };
+dbDelete = function(key){        return dbDeleteRaw(key).then(r=>{ __syncStamp(key); return r; }); };
+function __syncShowRefresh(){ const b=document.getElementById('sync-refresh'); if(b) b.style.display=''; const st=document.getElementById('sync-status'); if(st) st.textContent='New data available'; }
+function PinnacleSync_refresh(){ const p=window.__SYNC&&window.__SYNC._pending; if(p){ __syncWriteAll(p).then(()=>location.reload()); } else { location.reload(); } }
+async function __syncGetSavedAt(){ const v = await dbGet('__syncSavedAt'); return v || ''; }
+async function __syncIsEmpty(){ const e = await dbAllEntries(); return !e.some(x => String(x.key).indexOf('sess:')===0); }
+async function __syncWriteAll(data){
+  if(!(await ensureDB())) return;
+  __syncSuppress = true;
+  try{
+    await new Promise((res)=>{ const tx=db.transaction(STORE_NAME,'readwrite'); tx.objectStore(STORE_NAME).clear(); tx.oncomplete=()=>res(); tx.onerror=()=>res(); });
+    for(const ent of (data.entries||[])) await dbPutRaw(ent.key, ent.value);
+    await dbPutRaw('__syncSavedAt', data.savedAt);
+  } finally { __syncSuppress = false; }
+}
+window.__SYNC = {
+  toolName: 'doorknock',
+  _pending: null,
+  getData: async function(){
+    const entries = await dbAllEntries();
+    const hasData = entries.some(e => String(e.key).indexOf('sess:')===0);
+    let savedAt = null;
+    for(const e of entries){ if(e.key === '__syncSavedAt'){ savedAt = e.value; break; } }
+    if(!savedAt && hasData){ savedAt = new Date().toISOString(); await dbPutRaw('__syncSavedAt', savedAt); }
+    if(!savedAt) return null;
+    return { entries, savedAt };
+  },
+  apply: async function(data){
+    if(!data || !Array.isArray(data.entries)) return;
+    const cur = await __syncGetSavedAt();
+    if(cur && __syncTs(data.savedAt) <= __syncTs(cur)) return;   // already current
+    const empty = await __syncIsEmpty();
+    if(empty){ await __syncWriteAll(data); location.reload(); return; }
+    window.__SYNC._pending = data;
+    __syncShowRefresh();
+  }
+};
 
 function getSessionData() {
   const cleanRows = rows.map(r => {
@@ -2074,5 +2132,6 @@ function formatRecTime(s) {
 }
 
 </script>
+<script type="module" src="/firebase-sync.js"></script>
 </body>
 </html>
