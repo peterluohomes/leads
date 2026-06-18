@@ -363,6 +363,8 @@ body {
 .temp-btn[data-t="cool"] { --c: var(--cool); }
 .temp-btn[data-t="cold"] { --c: var(--cold); }
 .temp-btn[data-t="dnc"]  { --c: var(--dnc); }
+.temp-btn[data-t="listing"] { --c: #d94f4f; }
+.temp-btn[data-t="sold1y"]  { --c: #d94f4f; }
 .temp-btn.active { background: var(--c); border-color: var(--c); }
 
 /* check grid */
@@ -678,8 +680,15 @@ body {
     <div class="session-field" style="flex:1;">
       <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
     </div>
-    <div class="session-field sess-counter">
-      <div id="contact-counter" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+    <div class="session-field sess-counter" style="display:flex;gap:8px;align-items:flex-end;">
+      <div style="text-align:center;">
+        <div style="font-size:9px;opacity:.65;letter-spacing:1px;margin-bottom:2px;">STREET</div>
+        <div id="contact-counter" onclick="showStreetKnocks()" title="This street — tap for day/week/month/quarter/year" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:9px;opacity:.65;letter-spacing:1px;margin-bottom:2px;">ALL</div>
+        <div id="all-counter" onclick="showAllKnocks()" title="All streets — tap for day/week/month/quarter/year" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#cfe3ff;letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(120,160,210,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+      </div>
     </div>
   </div>
   <div class="sess-row sess-row-3">
@@ -688,7 +697,9 @@ body {
       <button class="btn btn-outline" onclick="saveSession()">💾 Save</button>
       <button class="btn btn-outline" onclick="document.getElementById('load-input').click()">📂 Load</button>
       <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
-      <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-outline" onclick="backupAllStreets()">💾 Backup All</button>
+      <button class="btn btn-outline" onclick="document.getElementById('restore-all-input').click()">📂 Restore All</button>
+      <input type="file" id="restore-all-input" accept=".json" style="display:none" onchange="restoreAllStreets(event)">
     </div>
   </div>
 </div>
@@ -706,7 +717,7 @@ body {
 
 <!-- ══════════ COLUMN HEADERS ══════════ -->
 <div class="col-headers">
-  <span onclick="sortByStreetNum()" title="Sort by street number" style="cursor:pointer;user-select:none;gap:5px;">St. No.<span id="sort-icon" style="font-size:13px;opacity:0.6;">⇅</span></span>
+  <span onclick="sortByStreetNum()" title="Sort: ST / Even-top / Odd-top × asc/desc" style="cursor:pointer;user-select:none;gap:5px;"><span id="sort-icon" style="font-size:13px;opacity:0.6;">ST NO ⇅</span></span>
   <span>Race</span>
   <span>Gender</span>
   <span>Age~</span>
@@ -794,6 +805,8 @@ body {
           <button class="temp-btn" data-t="cool" onclick="setPTemp(this)">🔵 Cool — Future possible</button>
           <button class="temp-btn" data-t="cold" onclick="setPTemp(this)">❄️ Cold — Not interested</button>
           <button class="temp-btn" data-t="dnc"  onclick="setPTemp(this)">⛔ Do Not Contact</button>
+          <button class="temp-btn" data-t="listing" onclick="setPTemp(this)">🔴 Listing — Active listing</button>
+          <button class="temp-btn" data-t="sold1y"  onclick="setPTemp(this)">🔴 Sold-1Y — Sold within 1 year</button>
         </div>
       </div>
     </div>
@@ -928,7 +941,9 @@ let rows = [];          // array of row objects
 let activeRowIdx = null; // which row the panel is editing
 let panelStarVal = 0;
 let panelTemp = '';
-let sortDir = 0; // 0 = unsorted, 1 = asc, -1 = desc
+let sortMode = -1; // -1 = unsorted; 0..5 = the six modes
+const SORT_LABELS = ['ST NO↑','ST NO↓','EV NO↑','EV NO↓','OD NO↑','OD NO↓'];
+function setSortLabel(){ const el=document.getElementById('sort-icon'); if(!el) return; el.textContent = sortMode<0 ? 'ST NO ⇅' : SORT_LABELS[sortMode]; el.style.opacity = sortMode<0 ? '0.6' : '1'; }
 
 const RACES = ['—','Chinese','South Asian','East Asian','Caucasian','Black','Hispanic','Middle Eastern','Other'];
 const GENDERS = ['—','Male','Female','Couple','Other'];
@@ -1079,6 +1094,135 @@ function onDateDispInput(){
   scheduleSave();
 }
 
+// ─────────────────────────────────────────
+// BACKUP / RESTORE — ALL STREETS
+// ─────────────────────────────────────────
+function dbAllEntries(){
+  return new Promise(async (resolve) => {
+    if(!(await ensureDB())){ resolve([]); return; }
+    try{
+      const tx = db.transaction(STORE_NAME,'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const out = [];
+      const req = store.openCursor();
+      req.onsuccess = (e) => { const cur = e.target.result; if(cur){ out.push({ key:cur.key, value:cur.value }); cur.continue(); } else { resolve(out); } };
+      req.onerror = () => resolve(out);
+    }catch(err){ resolve([]); }
+  });
+}
+async function backupAllStreets(){
+  try{ await persistSession(); }catch(e){}   // flush the open street first
+  const entries = await dbAllEntries();
+  const payload = { type:'PinnacleDoorKnockBackup', version:1, exported:new Date().toISOString(), entries };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)], {type:'application/json'}));
+  a.download = 'DoorKnock_AllStreets_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  const nStreets = entries.filter(e => String(e.key).indexOf('sess:')===0).length;
+  alert('Backed up ' + nStreets + ' street' + (nStreets===1?'':'s') + '.');
+}
+function restoreAllStreets(event){
+  const file = event.target.files[0];
+  event.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    let data;
+    try{ data = JSON.parse(e.target.result); }catch(err){ alert('That file is not valid backup JSON.'); return; }
+    const entries = (data && Array.isArray(data.entries)) ? data.entries : null;
+    if(!entries){ alert('This does not look like a Door Knock "Backup All" file.'); return; }
+    const nStreets = entries.filter(x => String(x.key).indexOf('sess:')===0).length;
+    if(!confirm('Restore ' + nStreets + ' street' + (nStreets===1?'':'s') + '?\n\nThis REPLACES every street currently on this device. Back up first if unsure.')) return;
+    if(!(await ensureDB())){ alert('Storage unavailable.'); return; }
+    try{
+      await new Promise((res)=>{ const tx=db.transaction(STORE_NAME,'readwrite'); tx.objectStore(STORE_NAME).clear(); tx.oncomplete=()=>res(); tx.onerror=()=>res(); });
+      for(const ent of entries){ await dbPut(ent.key, ent.value); }
+      alert('Restored ' + nStreets + ' street' + (nStreets===1?'':'s') + '. Reloading…');
+      location.reload();
+    }catch(err){ alert('Restore failed: ' + (err && err.message ? err.message : err)); }
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────
+// KNOCKED-BY-PERIOD ANALYTICS  (#4 per street, #5 all streets)
+// "knocked" = a door with a Last Knock date; bucketed by that date.
+// ─────────────────────────────────────────
+function parseLastKnock(s){
+  if(!s) return null;
+  const digits = String(s).replace(/[^0-9]/g,'');
+  let y,m,d;
+  if(digits.length===6){ y=2000+parseInt(digits.slice(0,2),10); m=parseInt(digits.slice(2,4),10); d=parseInt(digits.slice(4,6),10); }
+  else if(digits.length===8){ y=parseInt(digits.slice(0,4),10); m=parseInt(digits.slice(4,6),10); d=parseInt(digits.slice(6,8),10); }
+  else return null;
+  const dt = new Date(y, m-1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function knockCounts(rowList){
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = (today.getDay()+6)%7;                              // 0 = Monday
+  const weekStart = new Date(today); weekStart.setDate(today.getDate()-dow);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const c = {day:0,week:0,month:0,quarter:0,year:0,total:0,doors:rowList.length};
+  rowList.forEach(r=>{
+    const dt = parseLastKnock(r.lastknock);
+    if(!dt) return;
+    c.total++;
+    if(dt>=today)        c.day++;
+    if(dt>=weekStart)    c.week++;
+    if(dt>=monthStart)   c.month++;
+    if(dt>=quarterStart) c.quarter++;
+    if(dt>=yearStart)    c.year++;
+  });
+  return c;
+}
+function showKnockBreakdown(title, c){
+  const old = document.getElementById('knock-breakdown'); if(old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'knock-breakdown';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+  ov.onclick = (e)=>{ if(e.target===ov) ov.remove(); };
+  const line = (lbl,n)=>`<div style="display:flex;justify-content:space-between;gap:24px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.08);"><span>${lbl}</span><b style="font-family:'DM Mono',monospace;font-size:15px;">${n}</b></div>`;
+  ov.innerHTML = `<div style="background:#fff;color:#1a2b4a;border-radius:12px;padding:18px 22px;max-width:340px;width:100%;box-shadow:0 12px 48px rgba(0,0,0,.35);font:14px/1.4 system-ui,-apple-system,sans-serif;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b style="font-size:15px;">${title}</b><button onclick="document.getElementById('knock-breakdown').remove()" style="border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#999;">×</button></div>
+    <div style="font-size:11px;color:#888;margin-bottom:6px;">Doors knocked, by Last Knock date</div>
+    ${line('Today', c.day)}
+    ${line('This week', c.week)}
+    ${line('This month', c.month)}
+    ${line('This quarter', c.quarter)}
+    ${line('This year', c.year)}
+    <div style="display:flex;justify-content:space-between;gap:24px;padding:9px 0;"><span style="opacity:.7;">All-time knocked / doors</span><b style="font-family:'DM Mono',monospace;font-size:15px;">${c.total}/${c.doors}</b></div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+function showStreetKnocks(){
+  const street = (document.getElementById('sess-street').value||'').trim() || 'This street';
+  showKnockBreakdown('🚪 ' + street, knockCounts(rows));
+}
+async function allStreetRows(){
+  try{ await persistSession(); }catch(e){}                       // flush open street first
+  const entries = await dbAllEntries();
+  let all = [];
+  entries.forEach(e=>{ if(String(e.key).indexOf('sess:')===0 && e.value && Array.isArray(e.value.rows)) all = all.concat(e.value.rows); });
+  return all;
+}
+async function showAllKnocks(){
+  showKnockBreakdown('🏘️ All streets', knockCounts(await allStreetRows()));
+}
+async function updateAllCounter(){
+  const el = document.getElementById('all-counter'); if(!el) return;
+  try{
+    const entries = await dbAllEntries();
+    let knocked=0, doors=0;
+    entries.forEach(e=>{ if(String(e.key).indexOf('sess:')===0 && e.value && Array.isArray(e.value.rows)) e.value.rows.forEach(r=>{ doors++; if(parseLastKnock(r.lastknock)) knocked++; }); });
+    el.textContent = knocked + '/' + doors;
+  }catch(err){}
+}
+
 function getSessionData() {
   const cleanRows = rows.map(r => {
     const {sffx, ...rest} = r;
@@ -1100,6 +1244,7 @@ async function persistSession() {
     await dbPut(sessKey(curSessionId), getSessionData());
     savePending = false;
     flashSaveIndicator();
+    updateAllCounter();
   } catch(err) {
     console.warn('Auto-save failed:', err);
   }
@@ -1166,8 +1311,8 @@ function resetUIBlank() {
   document.getElementById('sess-start').value = '';
   document.getElementById('sess-end').value = '';
   document.getElementById('sess-street').value = '';
-  sortDir = 0;
-  const si = document.getElementById('sort-icon'); if (si){ si.textContent = '\u21C5'; si.style.opacity = '0.6'; }
+  sortMode = -1;
+  setSortLabel();
   render();
 }
 
@@ -1180,13 +1325,14 @@ async function loadCurrentSession() {
     document.getElementById('sess-end').value     = session.end     || '';
     document.getElementById('sess-street').value  = session.street  || '';
     rows = session.rows.map(r => { const {sffx, ...rest} = r; return {...rest}; });
-    sortDir = 0;
-    const si = document.getElementById('sort-icon'); if (si){ si.textContent = '\u21C5'; si.style.opacity = '0.6'; }
+    sortMode = -1;
+    setSortLabel();
     render();
   } else {
     resetUIBlank();
   }
   renderSessionSelect();
+  updateAllCounter();
 }
 
 // Build the street dropdown from the index
@@ -1280,7 +1426,7 @@ function buildDetailBlock(r, i) {
   const street = document.getElementById('sess-street').value || '';
   const addr = d.address || [r.stnum, street, d.unit].filter(Boolean).join(' ');
   const name = [d.fname, d.lname].filter(Boolean).join(' ') || '—';
-  const tempLabel = {hot:'🔥 Hot',warm:'🟡 Warm',cool:'🔵 Cool',cold:'❄️ Cold',dnc:'⛔ DNC'}[d.temp||r.temp] || '—';
+  const tempLabel = {hot:'🔥 Hot',warm:'🟡 Warm',cool:'🔵 Cool',cold:'❄️ Cold',dnc:'⛔ DNC',listing:'🔴 Listing',sold1y:'🔴 Sold-1Y'}[d.temp||r.temp] || '—';
   const tempCls = d.temp || r.temp || '';
   const stars = d.stars ? '★'.repeat(d.stars) + '☆'.repeat(5-d.stars) : '';
   const signals = (d.signals||[]).map(idx=>SIGNAL_LABELS[idx]).filter(Boolean).join(' · ') || '';
@@ -1326,23 +1472,29 @@ function buildDetailBlock(r, i) {
 // SORT BY STREET NUMBER
 // ─────────────────────────────────────────
 function sortByStreetNum() {
-  // cycle: unsorted → asc → desc → asc ...
-  sortDir = sortDir <= 0 ? 1 : -1;
-  const icon = document.getElementById('sort-icon');
-
+  // cycle 6 modes: ST↑ ST↓ EV↑ EV↓ OD↑ OD↓
+  sortMode = (sortMode + 1) % 6;
+  const dir = (sortMode % 2 === 0) ? 1 : -1;     // even index = ascending, odd = descending
+  const group = Math.floor(sortMode / 2);        // 0 = street, 1 = even-on-top, 2 = odd-on-top
   const parseNum = v => parseInt((v||'').replace(/[^0-9]/g,''), 10) || 0;
 
   rows.sort((a, b) => {
-    const na = parseNum(a.stnum), nb = parseNum(b.stnum);
-    // push empty rows to the bottom regardless of direction
+    // empty street-number rows always sink to the bottom
     if (!a.stnum && !b.stnum) return 0;
     if (!a.stnum) return 1;
     if (!b.stnum) return -1;
-    return sortDir * (na - nb);
+    const na = parseNum(a.stnum), nb = parseNum(b.stnum);
+    if (group > 0) {
+      const aEven = (na % 2 === 0), bEven = (nb % 2 === 0);
+      // group 1 = evens first; group 2 = odds first
+      const aKey = group === 1 ? (aEven ? 0 : 1) : (aEven ? 1 : 0);
+      const bKey = group === 1 ? (bEven ? 0 : 1) : (bEven ? 1 : 0);
+      if (aKey !== bKey) return aKey - bKey;
+    }
+    return dir * (na - nb);
   });
 
-  icon.textContent = sortDir === 1 ? '↑' : '↓';
-  icon.style.opacity = '1';
+  setSortLabel();
   render();
   scheduleSave();
 }
@@ -1365,8 +1517,8 @@ function stampKnock(i) {
 }
 
 function updateCounter() {
-  const talked = rows.filter(r => r.talked).length;
-  document.getElementById('contact-counter').textContent = talked + '/' + rows.length;
+  const knocked = rows.filter(r => parseLastKnock(r.lastknock)).length;
+  document.getElementById('contact-counter').textContent = knocked + '/' + rows.length;
 }
 
 function markActivity() {
@@ -1498,6 +1650,8 @@ function render() {
           <option value="cool"${r.temp==='cool'?' selected':''}>🔵 Cool</option>
           <option value="cold"${r.temp==='cold'?' selected':''}>❄️ Cold</option>
           <option value="dnc"${r.temp==='dnc'?' selected':''}>⛔ DNC</option>
+          <option value="listing"${r.temp==='listing'?' selected':''}>🔴 Listing</option>
+          <option value="sold1y"${r.temp==='sold1y'?' selected':''}>🔴 Sold-1Y</option>
         </select>
       </div>
       <div class="cell">
