@@ -1206,7 +1206,7 @@ function saveSession() {
   var hh12 = String(h%12||12).padStart(2,'0');
   var ampm = h>=12?'PM':'AM';
   var mi   = String(now.getMinutes()).padStart(2,'0');
-  a.download = 'Expired_'+yyyy+'_'+mm+'_'+dd+'_'+hh12+ampm+'_'+mi+'.json';
+  a.download = 'Expired_'+yyyy+'_'+mm+'_'+dd+'.json';
   a.click();
 }
 
