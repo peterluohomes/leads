@@ -130,6 +130,8 @@ body {
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
 .session-field input[type="time"] { min-width: 0; width: 78px; padding-left: 4px; padding-right: 2px; }
+.time-stack { flex-direction: column; align-items: stretch; gap: 4px; height: var(--tap); }
+.time-stack input[type="time"] { min-height: 0; height: calc((var(--tap) - 4px) / 2); padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
 .session-field input.street { min-width: 180px; }
 .street-select { min-height: var(--tap); width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: #fff; font-family: 'DM Mono', monospace; font-size: 14px; padding: 6px 10px; outline: none; }
 .street-select option { color: #111; }
@@ -669,10 +671,8 @@ body {
       <input type="hidden" id="sess-date">
       <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="10" placeholder="MM/DD/YYYY" oninput="onDateDispInput()">
     </div>
-    <div class="session-field">
+    <div class="session-field time-stack">
       <input type="time" id="sess-start" onchange="scheduleSave()">
-    </div>
-    <div class="session-field">
       <input type="time" id="sess-end" onchange="scheduleSave()">
     </div>
   </div>
