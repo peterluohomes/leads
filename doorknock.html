@@ -130,8 +130,11 @@ body {
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
 .session-field input[type="time"] { min-width: 0; width: 78px; padding-left: 4px; padding-right: 2px; }
-.time-stack { flex-direction: column; align-items: stretch; gap: 4px; height: var(--tap); }
-.time-stack input[type="time"] { min-height: 0; height: calc((var(--tap) - 4px) / 2); padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
+.time-stack { flex-direction: column; align-items: stretch; justify-content: space-between; gap: 4px; height: var(--tap); }
+.time-stack input[type="time"] { -webkit-appearance: none; appearance: none; min-height: 0; height: calc((var(--tap) - 4px) / 2); padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
+.street-stack { flex-direction: column; align-items: stretch; justify-content: space-between; gap: 4px; height: var(--tap); }
+.street-stack .street { -webkit-appearance: none; appearance: none; min-height: 0; height: calc((var(--tap) - 4px) / 2); padding-top: 0; padding-bottom: 0; }
+.street-stack #contact-counter { min-height: 0; height: calc((var(--tap) - 4px) / 2); font-size: 13px; padding: 0 10px; }
 .session-field input.street { min-width: 180px; }
 .street-select { min-height: var(--tap); width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: #fff; font-family: 'DM Mono', monospace; font-size: 14px; padding: 6px 10px; outline: none; }
 .street-select option { color: #111; }
@@ -480,7 +483,6 @@ body {
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
   .session-field input[type="time"] { min-width: 0; width: 72px; }
-  .time-stack input[type="time"] { position: relative; top: 4px; }
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
@@ -683,11 +685,9 @@ body {
     </div>
   </div>
   <div class="sess-row sess-row-2">
-    <div class="session-field" style="flex:1;">
+    <div class="session-field street-stack" style="flex:1;">
       <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
-    </div>
-    <div class="session-field sess-counter">
-      <div id="contact-counter" onclick="showStreetKnocks()" title="This street — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;min-height:var(--tap);display:flex;align-items:center;justify-content:center;">0/0</div>
+      <div id="contact-counter" onclick="showStreetKnocks()" title="This street — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-weight:600;color:var(--gold);letter-spacing:1px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;display:flex;align-items:center;justify-content:center;">0/0</div>
     </div>
   </div>
   <div class="sess-row sess-row-3">
