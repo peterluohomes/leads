@@ -647,7 +647,11 @@ body {
     </div>
     <div class="hdr-streets">
       <div id="all-counter" onclick="showAllKnocks()" title="All streets — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:#cfe3ff;letter-spacing:1px;padding:5px 11px;background:rgba(255,255,255,0.05);border:1px solid rgba(120,160,210,0.4);border-radius:6px;">0/0</div>
-      <select id="session-select" class="street-select" onchange="switchSession(this.value)"></select>
+      <span class="street-select-wrap" style="position:relative;display:flex;flex:1;min-width:120px;">
+        <span aria-hidden="true" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,0.75);font-size:11px;line-height:1;">▲</span>
+        <span aria-hidden="true" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,0.75);font-size:11px;line-height:1;">▼</span>
+        <select id="session-select" class="street-select" onchange="switchSession(this.value)" style="-webkit-appearance:none;appearance:none;padding-left:26px;padding-right:26px;text-align:center;text-align-last:center;"></select>
+      </span>
       <button class="btn btn-outline" onclick="newSession()">＋ New St.</button>
       <button class="btn btn-outline" onclick="deleteSession()">🗑 Delete</button>
     </div>
@@ -1418,6 +1422,29 @@ function renderSessionSelect() {
     o.textContent = (s.name && s.name.trim()) ? s.name : 'Untitled street';
     if (s.id === curSessionId) o.selected = true;
     sel.appendChild(o);
+  });
+  attachSessionSortClick();
+}
+function sortSessionsByName(dir){
+  if(!Array.isArray(sessionIndex) || sessionIndex.length < 2) return;
+  sessionIndex.sort((a,b)=>{
+    const an=(a.name||'').trim().toLowerCase(), bn=(b.name||'').trim().toLowerCase();
+    const cmp = an.localeCompare(bn, undefined, {numeric:true, sensitivity:'base'});
+    return dir==='desc' ? -cmp : cmp;
+  });
+  saveIndex();
+  renderSessionSelect();
+}
+function attachSessionSortClick(){
+  const sel = document.getElementById('session-select');
+  if(!sel || sel.__sortAttached) return;
+  sel.__sortAttached = true;
+  sel.title = 'Tap left half: sort streets A→Z · right half: Z→A';
+  sel.addEventListener('pointerdown', function(e){
+    const rect = sel.getBoundingClientRect();
+    if(rect.width <= 0) return;
+    const onLeft = (e.clientX - rect.left) < rect.width / 2;
+    sortSessionsByName(onLeft ? 'asc' : 'desc');
   });
 }
 
