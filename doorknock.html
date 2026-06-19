@@ -130,9 +130,9 @@ body {
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
 .session-field input[type="time"] { min-width: 0; width: 78px; padding-left: 4px; padding-right: 2px; }
-.time-street-col { display: flex; flex-direction: column; justify-content: space-between; gap: 0; height: var(--tap); flex: 0 0 auto; width: calc(24ch + 20px); box-sizing: border-box; min-width: 0; align-items: stretch; }
-.time-row { display: flex; gap: 6px; width: 100%; height: calc(var(--tap) / 2 - 2px); }
-.time-row input[type="time"] { flex: 1 1 0; min-width: 0 !important; width: auto !important; -webkit-appearance: none; appearance: none; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
+.time-street-col { display: flex; flex-direction: column; justify-content: space-between; gap: 0; height: var(--tap); flex: 0 1 auto; width: calc(24ch + 20px); max-width: 100%; min-width: 0; align-items: stretch; }
+.time-row { display: flex; justify-content: space-between; gap: 6px; width: 100%; height: calc(var(--tap) / 2 - 2px); }
+.time-row input[type="time"] { flex: 0 1 10ch; min-width: 0; width: 10ch; max-width: 10ch; -webkit-appearance: none; appearance: none; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
 .time-street-col .street { width: 100% !important; min-width: 0 !important; box-sizing: border-box; padding-left: 10px; padding-right: 10px; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 13px; }
 .counter-field { display: flex; align-items: flex-start; }
 .counter-field #contact-counter { height: var(--tap); min-height: 0; }
