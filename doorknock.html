@@ -369,8 +369,9 @@ body {
 .temp-btn[data-t="cool"] { --c: var(--cool); }
 .temp-btn[data-t="cold"] { --c: var(--cold); }
 .temp-btn[data-t="dnc"]  { --c: var(--dnc); }
-.temp-btn[data-t="listing"] { --c: #d94f4f; }
-.temp-btn[data-t="sold1y"]  { --c: #d94f4f; }
+.temp-btn[data-t="listing"] { --c: #8b5cf6; }
+.temp-btn[data-t="sold1y"]  { --c: #e8821e; }
+.temp-btn[data-t="expired"] { --c: #2e9e5b; }
 .temp-btn.active { background: var(--c); border-color: var(--c); }
 
 /* check grid */
@@ -648,9 +649,9 @@ body {
     <div class="hdr-streets">
       <div id="all-counter" onclick="showAllKnocks()" title="All streets — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:#cfe3ff;letter-spacing:1px;padding:5px 11px;background:rgba(255,255,255,0.05);border:1px solid rgba(120,160,210,0.4);border-radius:6px;">0/0</div>
       <span class="street-select-wrap" style="position:relative;display:flex;flex:1;min-width:120px;">
-        <span aria-hidden="true" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,0.75);font-size:11px;line-height:1;">▲</span>
-        <span aria-hidden="true" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,0.75);font-size:11px;line-height:1;">▼</span>
-        <select id="session-select" class="street-select" onchange="switchSession(this.value)" style="-webkit-appearance:none;appearance:none;padding-left:26px;padding-right:26px;text-align:center;text-align-last:center;"></select>
+        <span role="button" aria-label="Sort streets A to Z" onclick="sortSessionsByName('asc')" style="position:absolute;left:0;top:0;height:100%;width:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.85);font-size:11px;line-height:1;z-index:2;">▲</span>
+        <span role="button" aria-label="Sort streets Z to A" onclick="sortSessionsByName('desc')" style="position:absolute;right:0;top:0;height:100%;width:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.85);font-size:11px;line-height:1;z-index:2;">▼</span>
+        <select id="session-select" class="street-select" onchange="switchSession(this.value)" style="-webkit-appearance:none;appearance:none;padding-left:32px;padding-right:32px;text-align:center;text-align-last:center;"></select>
       </span>
       <button class="btn btn-outline" onclick="newSession()">＋ New St.</button>
       <button class="btn btn-outline" onclick="deleteSession()">🗑 Delete</button>
@@ -809,8 +810,9 @@ body {
           <button class="temp-btn" data-t="cool" onclick="setPTemp(this)">🔵 Cool — Future possible</button>
           <button class="temp-btn" data-t="cold" onclick="setPTemp(this)">❄️ Cold — Not interested</button>
           <button class="temp-btn" data-t="dnc"  onclick="setPTemp(this)">⛔ Do Not Contact</button>
-          <button class="temp-btn" data-t="listing" onclick="setPTemp(this)">🔴 Listing — Active listing</button>
-          <button class="temp-btn" data-t="sold1y"  onclick="setPTemp(this)">🔴 Sold-1Y — Sold within 1 year</button>
+          <button class="temp-btn" data-t="listing" onclick="setPTemp(this)">🟣 Listing — Active listing</button>
+          <button class="temp-btn" data-t="sold1y"  onclick="setPTemp(this)">🟠 Sold-1Y — Sold within 1 year</button>
+          <button class="temp-btn" data-t="expired" onclick="setPTemp(this)">🟢 Expired — Expired listing</button>
         </div>
       </div>
     </div>
@@ -1199,7 +1201,15 @@ const KNOCK_MOTIVATIONS = [
   "Presence over pressure","The follow-up wins","Be genuinely interested","Persistence is a superpower",
   "One street at a time","Plant relationships, harvest trust","Your calm is contagious","Knock with purpose",
   "Today builds tomorrow's pipeline","Be the easy yes","Rain or shine, show up","Listening is the close",
-  "Doors open for the persistent","Keep the streak alive","Every name matters","Finish the block"
+  "Doors open for the persistent","Keep the streak alive","Every name matters","Finish the block",
+  "Talk to one more door","Warmth opens more than words","Be the friendly face","Trust grows one visit at a time",
+  "Notes today, deals tomorrow","Smile before you knock","Every street has a story","Follow up faithfully",
+  "Show genuine interest","Calm energy carries far","The brave earn the listings","Build the relationship first",
+  "Patience is a strategy","Your name, their memory","Knock, listen, learn","Consistency wins the area",
+  "One block, fully done","Be helpful first","Quiet persistence pays","Today's effort, future reward",
+  "Earn trust, earn business","Keep going, gently","Presence builds reputation","The map rewards walking",
+  "Care more than you sell","Make today productive","Small talk builds big trust","Stay light, stay steady",
+  "Doors favor the consistent","Plant today, harvest later"
 ];
 function showKnockBreakdown(title, c){
   const old = document.getElementById('knock-breakdown'); if(old) old.remove();
@@ -1423,7 +1433,6 @@ function renderSessionSelect() {
     if (s.id === curSessionId) o.selected = true;
     sel.appendChild(o);
   });
-  attachSessionSortClick();
 }
 function sortSessionsByName(dir){
   if(!Array.isArray(sessionIndex) || sessionIndex.length < 2) return;
@@ -1434,18 +1443,6 @@ function sortSessionsByName(dir){
   });
   saveIndex();
   renderSessionSelect();
-}
-function attachSessionSortClick(){
-  const sel = document.getElementById('session-select');
-  if(!sel || sel.__sortAttached) return;
-  sel.__sortAttached = true;
-  sel.title = 'Tap left half: sort streets A→Z · right half: Z→A';
-  sel.addEventListener('pointerdown', function(e){
-    const rect = sel.getBoundingClientRect();
-    if(rect.width <= 0) return;
-    const onLeft = (e.clientX - rect.left) < rect.width / 2;
-    sortSessionsByName(onLeft ? 'asc' : 'desc');
-  });
 }
 
 // Keep the dropdown label in sync as the Street field is typed
@@ -1525,7 +1522,7 @@ function buildDetailBlock(r, i) {
   const street = document.getElementById('sess-street').value || '';
   const addr = d.address || [r.stnum, street, d.unit].filter(Boolean).join(' ');
   const name = [d.fname, d.lname].filter(Boolean).join(' ') || '—';
-  const tempLabel = {hot:'🔥 Hot',warm:'🟡 Warm',cool:'🔵 Cool',cold:'❄️ Cold',dnc:'⛔ DNC',listing:'🔴 Listing',sold1y:'🔴 Sold-1Y'}[d.temp||r.temp] || '—';
+  const tempLabel = {hot:'🔥 Hot',warm:'🟡 Warm',cool:'🔵 Cool',cold:'❄️ Cold',dnc:'⛔ DNC',listing:'🟣 Listing',sold1y:'🟠 Sold-1Y',expired:'🟢 Expired'}[d.temp||r.temp] || '—';
   const tempCls = d.temp || r.temp || '';
   const stars = d.stars ? '★'.repeat(d.stars) + '☆'.repeat(5-d.stars) : '';
   const signals = (d.signals||[]).map(idx=>SIGNAL_LABELS[idx]).filter(Boolean).join(' · ') || '';
@@ -1750,8 +1747,9 @@ function render() {
           <option value="cool"${r.temp==='cool'?' selected':''}>🔵 Cool</option>
           <option value="cold"${r.temp==='cold'?' selected':''}>❄️ Cold</option>
           <option value="dnc"${r.temp==='dnc'?' selected':''}>⛔ DNC</option>
-          <option value="listing"${r.temp==='listing'?' selected':''}>🔴 Listing</option>
-          <option value="sold1y"${r.temp==='sold1y'?' selected':''}>🔴 Sold-1Y</option>
+          <option value="listing"${r.temp==='listing'?' selected':''}>🟣 Listing</option>
+          <option value="sold1y"${r.temp==='sold1y'?' selected':''}>🟠 Sold-1Y</option>
+          <option value="expired"${r.temp==='expired'?' selected':''}>🟢 Expired</option>
         </select>
       </div>
       <div class="cell">
