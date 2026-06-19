@@ -130,11 +130,12 @@ body {
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
 .session-field input[type="time"] { min-width: 0; width: 78px; padding-left: 4px; padding-right: 2px; }
-.time-stack { flex-direction: column; align-items: stretch; justify-content: space-between; gap: 4px; height: var(--tap); }
-.time-stack input[type="time"] { -webkit-appearance: none; appearance: none; min-height: 0; height: calc((var(--tap) - 4px) / 2); padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
-.street-stack { flex-direction: column; align-items: stretch; justify-content: space-between; gap: 4px; height: var(--tap); }
-.street-stack .street { -webkit-appearance: none; appearance: none; min-height: 0; height: calc((var(--tap) - 4px) / 2); padding-top: 0; padding-bottom: 0; }
-.street-stack #contact-counter { min-height: 0; height: calc((var(--tap) - 4px) / 2); font-size: 13px; padding: 0 10px; }
+.time-street-col { display: flex; flex-direction: column; justify-content: space-between; gap: 0; height: var(--tap); flex: 0 0 auto; min-width: 0; align-items: stretch; }
+.time-row { display: flex; gap: 6px; height: calc(var(--tap) / 2 - 2px); }
+.time-row input[type="time"] { flex: 1 1 0; min-width: 0 !important; width: auto !important; -webkit-appearance: none; appearance: none; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
+.time-street-col .street { width: 24ch !important; min-width: 0 !important; box-sizing: content-box; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 13px; }
+.counter-field { display: flex; align-items: flex-start; }
+.counter-field #contact-counter { height: var(--tap); min-height: 0; }
 .session-field input.street { min-width: 180px; }
 .street-select { min-height: var(--tap); width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(201,168,76,0.35); border-radius: 6px; color: #fff; font-family: 'DM Mono', monospace; font-size: 14px; padding: 6px 10px; outline: none; }
 .street-select option { color: #111; }
@@ -482,7 +483,7 @@ body {
   .sess-row-2 .session-field input.street { min-width: 70px; }
   .session-field input, .session-field select { font-size: 15px; padding: 9px 10px; }
   .session-field input[type="date"] { min-width: 150px; }
-  .session-field input[type="time"] { min-width: 0; width: 72px; }
+  .session-field input[type="time"] { min-width: 0; }
   .session-field input.street { min-width: 200px; }
 
   .col-headers {
@@ -674,20 +675,20 @@ body {
 
 <!-- ══════════ SESSION META BAR ══════════ -->
 <div class="session-bar">
-  <div class="sess-row sess-row-1">
+  <div class="sess-row sess-row-1" style="flex:1; min-width:0; align-items:flex-start;">
     <div class="session-field">
       <input type="hidden" id="sess-date">
       <input type="text" id="sess-date-disp" class="date-mmdd" inputmode="numeric" maxlength="10" placeholder="MM/DD/YYYY" oninput="onDateDispInput()">
     </div>
-    <div class="session-field time-stack">
-      <input type="time" id="sess-start" onchange="scheduleSave()">
-      <input type="time" id="sess-end" onchange="scheduleSave()">
-    </div>
-  </div>
-  <div class="sess-row sess-row-2">
-    <div class="session-field street-stack" style="flex:1;">
+    <div class="time-street-col">
+      <div class="time-row">
+        <input type="time" id="sess-start" onchange="scheduleSave()">
+        <input type="time" id="sess-end" onchange="scheduleSave()">
+      </div>
       <input type="text" class="street" id="sess-street" placeholder="e.g. Bayview Ave" oninput="onStreetInput()">
-      <div id="contact-counter" onclick="showStreetKnocks()" title="This street — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-weight:600;color:var(--gold);letter-spacing:1px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;display:flex;align-items:center;justify-content:center;">0/0</div>
+    </div>
+    <div class="counter-field">
+      <div id="contact-counter" onclick="showStreetKnocks()" title="This street — knocked today / total doors · tap for full breakdown" style="cursor:pointer;font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:var(--gold);letter-spacing:1px;padding:0 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:6px;display:flex;align-items:center;justify-content:center;">0/0</div>
     </div>
   </div>
   <div class="sess-row sess-row-3">
