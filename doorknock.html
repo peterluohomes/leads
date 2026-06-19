@@ -130,10 +130,10 @@ body {
 .session-field select option { background: var(--navy); }
 .session-field input[type="date"] { min-width: 140px; }
 .session-field input[type="time"] { min-width: 0; width: 78px; padding-left: 4px; padding-right: 2px; }
-.time-street-col { display: flex; flex-direction: column; justify-content: space-between; gap: 0; height: var(--tap); flex: 0 0 auto; min-width: 0; align-items: stretch; }
-.time-row { display: flex; gap: 6px; height: calc(var(--tap) / 2 - 2px); }
+.time-street-col { display: flex; flex-direction: column; justify-content: space-between; gap: 0; height: var(--tap); flex: 0 0 auto; width: calc(24ch + 20px); box-sizing: border-box; min-width: 0; align-items: stretch; }
+.time-row { display: flex; gap: 6px; width: 100%; height: calc(var(--tap) / 2 - 2px); }
 .time-row input[type="time"] { flex: 1 1 0; min-width: 0 !important; width: auto !important; -webkit-appearance: none; appearance: none; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 12px; line-height: 1; }
-.time-street-col .street { width: 24ch !important; min-width: 0 !important; box-sizing: content-box; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 13px; }
+.time-street-col .street { width: 100% !important; min-width: 0 !important; box-sizing: border-box; padding-left: 10px; padding-right: 10px; height: calc(var(--tap) / 2 - 2px); min-height: 0; padding-top: 0; padding-bottom: 0; font-size: 13px; }
 .counter-field { display: flex; align-items: flex-start; }
 .counter-field #contact-counter { height: var(--tap); min-height: 0; }
 .session-field input.street { min-width: 180px; }
@@ -1180,8 +1180,26 @@ function knockCounts(rowList){
   });
   return c;
 }
+const KNOCK_MOTIVATIONS = [
+  "Every door is a possibility","The next yes is close","Knock, smile, repeat","Momentum beats motivation",
+  "Showing up is half of it","One conversation changes everything","Rejection is just routing","Plant seeds today",
+  "Consistency compounds","Be the calm in the doorway","Listen more than you talk","Your presence is the pitch",
+  "Doors do not open themselves","Progress over perfection","Today's no, tomorrow's yes","Stay curious, stay kind",
+  "Small steps, big results","The street rewards persistence","Confidence is quiet","Knock like you mean it",
+  "Patience pays in listings","Be useful, not pushy","Trust is built door by door","Keep your energy steady",
+  "Just one more door","You are closer than you think","Effort is the edge","Showing up is winning",
+  "Every knock plants a name","Calm beats clever","Serve first, sell later","The work works",
+  "Be remembered for warmth","Numbers reward the brave","Quiet confidence opens doors","Plant, water, wait",
+  "Your reputation walks ahead","Steady hands, steady results","Make the day count","Connection over conversion",
+  "Be the agent they recall","Discipline today, listings tomorrow","Keep knocking, keep growing","Small wins stack up",
+  "Presence over pressure","The follow-up wins","Be genuinely interested","Persistence is a superpower",
+  "One street at a time","Plant relationships, harvest trust","Your calm is contagious","Knock with purpose",
+  "Today builds tomorrow's pipeline","Be the easy yes","Rain or shine, show up","Listening is the close",
+  "Doors open for the persistent","Keep the streak alive","Every name matters","Finish the block"
+];
 function showKnockBreakdown(title, c){
   const old = document.getElementById('knock-breakdown'); if(old) old.remove();
+  const motiv = KNOCK_MOTIVATIONS[Math.floor(Math.random()*KNOCK_MOTIVATIONS.length)];
   const ov = document.createElement('div');
   ov.id = 'knock-breakdown';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
@@ -1189,6 +1207,7 @@ function showKnockBreakdown(title, c){
   const line = (lbl,n)=>`<div style="display:flex;justify-content:space-between;gap:24px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.08);"><span>${lbl}</span><b style="font-family:'DM Mono',monospace;font-size:15px;">${n}</b></div>`;
   ov.innerHTML = `<div style="background:#fff;color:#1a2b4a;border-radius:12px;padding:18px 22px;max-width:340px;width:100%;box-shadow:0 12px 48px rgba(0,0,0,.35);font:14px/1.4 system-ui,-apple-system,sans-serif;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b style="font-size:15px;">${title}</b><button onclick="document.getElementById('knock-breakdown').remove()" style="border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#999;">×</button></div>
+    <div style="font-size:13px;font-weight:700;color:#b8860b;margin:2px 0 10px;font-style:italic;">“${motiv}”</div>
     <div style="font-size:11px;color:#888;margin-bottom:6px;">Doors knocked, by Last Knock date</div>
     ${line('Today', c.day)}
     ${line('This week', c.week)}
