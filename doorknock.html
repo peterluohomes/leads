@@ -1168,21 +1168,24 @@ function parseLastKnock(s){
 function knockCounts(rowList){
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dow = (today.getDay()+6)%7;                              // 0 = Monday
-  const weekStart = new Date(today); weekStart.setDate(today.getDate()-dow);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-  const c = {day:0,week:0,month:0,quarter:0,year:0,total:0,doors:rowList.length};
+  const d7  = new Date(today); d7.setDate(today.getDate()-6);    // last 7 days (incl. today)
+  const d30 = new Date(today); d30.setDate(today.getDate()-29);  // last 30 days (incl. today)
+  const m3  = new Date(today.getFullYear(), today.getMonth()-3,  today.getDate());
+  const m6  = new Date(today.getFullYear(), today.getMonth()-6,  today.getDate());
+  const m12 = new Date(today.getFullYear(), today.getMonth()-12, today.getDate());
+  const m24 = new Date(today.getFullYear(), today.getMonth()-24, today.getDate());
+  const c = {today:0,d7:0,d30:0,m3:0,m6:0,m12:0,m24:0,total:0,doors:rowList.length};
   rowList.forEach(r=>{
     const dt = parseLastKnock(r.lastknock);
     if(!dt) return;
     c.total++;
-    if(dt>=today)        c.day++;
-    if(dt>=weekStart)    c.week++;
-    if(dt>=monthStart)   c.month++;
-    if(dt>=quarterStart) c.quarter++;
-    if(dt>=yearStart)    c.year++;
+    if(dt>=today) c.today++;
+    if(dt>=d7)    c.d7++;
+    if(dt>=d30)   c.d30++;
+    if(dt>=m3)    c.m3++;
+    if(dt>=m6)    c.m6++;
+    if(dt>=m12)   c.m12++;
+    if(dt>=m24)   c.m24++;
   });
   return c;
 }
@@ -1223,11 +1226,13 @@ function showKnockBreakdown(title, c){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b style="font-size:15px;">${title}</b><button onclick="document.getElementById('knock-breakdown').remove()" style="border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#999;">×</button></div>
     <div style="font-size:13px;font-weight:700;color:#b8860b;margin:2px 0 10px;font-style:italic;">“${motiv}”</div>
     <div style="font-size:11px;color:#888;margin-bottom:6px;">Doors knocked, by Last Knock date</div>
-    ${line('Today', c.day)}
-    ${line('This week', c.week)}
-    ${line('This month', c.month)}
-    ${line('This quarter', c.quarter)}
-    ${line('This year', c.year)}
+    ${line('Today', c.today)}
+    ${line('Last 7 days', c.d7)}
+    ${line('Last 30 days', c.d30)}
+    ${line('Last 3 months', c.m3)}
+    ${line('Last 6 months', c.m6)}
+    ${line('Last 12 months', c.m12)}
+    ${line('Last 24 months', c.m24)}
     <div style="display:flex;justify-content:space-between;gap:24px;padding:9px 0;"><span style="opacity:.7;">All-time knocked / doors</span><b style="font-family:'DM Mono',monospace;font-size:15px;">${c.total}/${c.doors}</b></div>
   </div>`;
   document.body.appendChild(ov);
