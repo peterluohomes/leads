@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sold Comparables · Richmond Hill</title>
+<title>Sold</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
   .brand-meta b{color:var(--gold-soft);font-weight:600}
 
   /* controls (compact, one row) */
-  .controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+  .controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:nowrap}
   .field{display:flex;flex-direction:column;gap:4px;min-width:0}
   .field > label{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:#9aa4ba;
     font-weight:600;padding-left:2px}
@@ -68,6 +68,15 @@
   .combo-opt .n{font-size:11.5px;color:var(--faint);font-weight:600}
   .combo-empty{padding:15px 12px;color:var(--faint);font-size:13px;text-align:center}
 
+  /* Loaded dropdown (sits on the Years line) */
+  .combo.loaded{flex:0 0 auto;min-width:128px}
+  .combo.loaded .combo-pop{left:auto;right:0;min-width:230px}
+  .loaded-opt .nm{font-weight:600}
+  .loaded-opt .n{margin-left:auto;font-family:'DM Mono',ui-monospace,monospace}
+  .loaded-opt .lx{flex:0 0 auto;border:none;background:var(--cream);color:var(--slate);width:20px;height:20px;
+    border-radius:50%;cursor:pointer;font-size:13px;line-height:1;display:grid;place-items:center}
+  .loaded-opt .lx:hover{background:#e9c9c9;color:#a23b3b}
+
   .search-field{width:158px}
   .search-field input{width:100%;background:var(--paper);border:1px solid rgba(255,255,255,.16);
     color:var(--ink);border-radius:8px;padding:9px 11px;font:inherit;font-size:13.5px}
@@ -85,6 +94,18 @@
     color:var(--gold-soft);font-size:20px;font-weight:400;line-height:1;border-radius:8px;cursor:pointer;
     display:grid;place-items:center;transition:all .12s}
   .addbtn:hover{background:linear-gradient(150deg,var(--gold-2),var(--gold));border-color:transparent;color:var(--navy)}
+
+  /* Keep Community, +, Street, Find address and Load strictly on one line at all widths. */
+  .controls{flex-wrap:nowrap}
+  .controls > .field{flex:1 1 0;min-width:0}
+  .controls > .field:last-child{flex:0 0 auto}        /* Load keeps its natural size */
+  .community-wrap{min-width:0}
+  .community-wrap .combo{flex:1 1 0;min-width:0;width:auto}
+  .combo.community,.combo.street{width:auto;min-width:0}
+  .search-field{width:auto}
+  .search-field input{min-width:0}
+
+
   .modal-body select{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:9px;padding:11px 12px;
     font:inherit;font-size:15px;color:var(--ink);background:#fff}
   .modal-body select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(187,155,70,.18)}
@@ -205,7 +226,7 @@
 
   @media (max-width:680px){
     .brand-meta{display:none}
-    .combo.community,.combo.street,.search-field{width:calc(50% - 5px)}
+    .combo.community,.combo.street,.search-field{width:auto}
     .stat .v{font-size:20px}
     .drawer-head{padding:18px}
     .dgrid{grid-template-columns:1fr}
@@ -220,8 +241,7 @@
     <div class="brandrow">
       <div class="mark">PL</div>
       <div>
-        <h1>Sold Comparables</h1>
-        <p>Richmond Hill · Pinnacle Listing System</p>
+        <h1>Sold</h1>
       </div>
       <div class="brand-meta">
         <div><b id="metaCount">—</b> records</div>
@@ -274,11 +294,16 @@
       <span class="ylabel">Years</span>
       <button class="yr-quick" id="yrAll">all</button><span class="ysep">·</span><button class="yr-quick" id="yrNone">none</button>
       <span id="yearRow" style="display:contents"></span>
+      <div class="combo loaded" id="comboLoaded" style="display:none">
+        <button class="combo-btn" type="button"><span class="lbl">Loaded</span><span class="cnt"></span><span class="chev">▼</span></button>
+        <div class="combo-pop">
+          <div class="combo-list" role="listbox" id="loadedList"></div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
-<div class="imports" id="importsBar" style="display:none"></div>
 <section class="summary">
   <div class="stat type-stat">
     <div class="k">Type</div>
@@ -500,10 +525,16 @@ function typeOptions(){
 }
 const comboType=makeCombo('comboType',typeOptions,()=>state.type,(val)=>{ state.type=val; render(); });
 function refreshCombos(){ comboCommunity._sync(); comboStreet._sync(); comboType._sync(); }
+
+const comboLoaded=document.getElementById('comboLoaded');
+comboLoaded.querySelector('.combo-btn').addEventListener('click',()=> comboLoaded.classList.toggle('open'));
+comboLoaded._close=()=> comboLoaded.classList.remove('open');
+
 document.addEventListener('click',e=>{
   if(!comboCommunity.contains(e.target)) comboCommunity._close();
   if(!comboStreet.contains(e.target)) comboStreet._close();
   if(!comboType.contains(e.target)) comboType._close();
+  if(!comboLoaded.contains(e.target)) comboLoaded._close();
 });
 
 /* ---------------- Years (one line) ---------------- */
@@ -633,24 +664,29 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); co
 
 /* ---------------- Imported-data bar ---------------- */
 function renderImportsBar(){
-  const bar=document.getElementById('importsBar');
-  if(!IMPORTS.length){ bar.style.display='none'; bar.innerHTML=''; return; }
-  bar.style.display='flex';
-  bar.innerHTML='<span class="ilabel">Loaded</span>';
+  const combo=document.getElementById('comboLoaded');
+  const list=document.getElementById('loadedList');
+  const cnt=combo.querySelector('.cnt');
+  if(!IMPORTS.length){ combo.style.display='none'; combo.classList.remove('open'); list.innerHTML=''; cnt.textContent=''; return; }
+  combo.style.display='';
+  cnt.textContent=IMPORTS.length;
+  list.innerHTML='';
   IMPORTS.forEach(imp=>{
-    const chip=document.createElement('span'); chip.className='ichip';
-    const b=document.createElement('b'); b.textContent=imp.community;
-    chip.appendChild(b);
-    chip.appendChild(document.createTextNode(' · '+imp.records.length+' '));
-    const x=document.createElement('button'); x.className='ix'; x.title='Remove'; x.textContent='×';
-    x.addEventListener('click',async()=>{
+    const ys=[...new Set(imp.records.map(r=>r.year))].sort();
+    const yLabel = ys.length ? (ys.length===1 ? (''+ys[0]) : (ys[0]+'–'+ys[ys.length-1])) : '—';
+    const d=document.createElement('div'); d.className='combo-opt loaded-opt';
+    const nm=document.createElement('span'); nm.className='nm'; nm.textContent=imp.community;
+    const n=document.createElement('span'); n.className='n'; n.textContent=yLabel;
+    const x=document.createElement('button'); x.className='lx'; x.title='Remove'; x.textContent='×';
+    x.addEventListener('click',async(e)=>{
+      e.stopPropagation();
       await dbDel(imp.id); IMPORTS=IMPORTS.filter(z=>z.id!==imp.id);
       const stillThere=EMBEDDED.concat(...IMPORTS.map(i=>i.records)).some(r=>r.community===state.community);
       if(!stillThere){ state.community='ALL'; state.street='ALL'; }
       rebuild();
     });
-    chip.appendChild(x);
-    bar.appendChild(chip);
+    d.appendChild(nm); d.appendChild(n); d.appendChild(x);
+    list.appendChild(d);
   });
 }
 

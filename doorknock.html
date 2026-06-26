@@ -218,8 +218,37 @@ body {
 .cell-street input.stnum { flex: 1; font-family: 'DM Mono', monospace; }
 .cell-street input.sffx  { width: 34px; }
 
-/* note field */
+/* note field — two compact lines within the existing row height */
 .cell-note input { font-size: var(--fs-cell); }
+.cell-note textarea {
+  width: 100%;
+  height: calc(var(--row-h) - 8px);            /* fits inside row; row height unchanged */
+  line-height: calc((var(--row-h) - 8px) / 2); /* each line ≈ half the row height */
+  resize: none;
+  overflow: hidden;
+  display: block;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: var(--fs-cell);
+  color: var(--text);
+  padding: 0 4px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.cell-note textarea:focus {
+  border-bottom-color: var(--gold);
+  background: rgba(201,168,76,0.07);
+}
+
+/* ST NO — cap visible width to ~6 chars (monospace) */
+.cell input.stnum { width: 100%; max-width: calc(6ch + 12px); }
+
+/* Age — cap to ~3 chars and drop number spinners so it stays tight */
+.cell input.age { width: 100%; max-width: calc(3ch + 14px); -moz-appearance: textfield; }
+.cell input.age::-webkit-outer-spin-button,
+.cell input.age::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* + expand button — large tap target for tablet */
 .expand-btn {
@@ -621,6 +650,9 @@ body {
 .due-banner-actions{margin-left:auto;display:flex;gap:8px;}
 .due-btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:5px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .due-btn:hover{background:var(--gold);color:var(--navy);}
+.due-done{flex-shrink:0;background:transparent;border:1px solid #5bbf7a;color:#7ed79a;border-radius:5px;padding:4px 9px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.due-done:hover{background:#5bbf7a;color:var(--navy);}
+@media(max-width:700px){.due-done{margin-left:auto;}}
 .due-list{display:flex;flex-direction:column;gap:5px;}
 .due-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.25);border-radius:5px;padding:7px 12px;cursor:pointer;font-size:13px;}
 .due-item:hover{background:rgba(201,168,76,0.18);}
@@ -1694,7 +1726,7 @@ function renderDueBanner(){
     var meta=[]; if(x.futime)meta.push(x.futime); if(x.fumethod)meta.push(x.fumethod); meta.push(tag);
     var div=document.createElement('div'); div.className='due-item';
     div.onclick=(function(idx){return function(){openPanel(idx);};})(x.idx);
-    div.innerHTML='<span class="due-dot" style="background:'+dot+'"></span><span class="due-date">'+escH(x.fudate)+'</span><span class="due-name">'+escH(x.name)+'</span><span class="due-meta">'+escH(meta.join(' · '))+'</span>';
+    div.innerHTML='<span class="due-dot" style="background:'+dot+'"></span><span class="due-date">'+escH(x.fudate)+'</span><span class="due-name">'+escH(x.name)+'</span><span class="due-meta">'+escH(meta.join(' · '))+'</span><button class="due-done" onclick="event.stopPropagation();markDueDone('+x.idx+')" title="Mark this follow-up done">&#10003; Done</button>';
     list.appendChild(div);
   });
   var parts=[]; if(nOver)parts.push(nOver+' overdue'); if(nToday)parts.push(nToday+' today'); if(nSoon)parts.push(nSoon+' coming up');
@@ -1702,6 +1734,18 @@ function renderDueBanner(){
   banner.classList.add('show');
 }
 function dismissDueBanner(){ bannerDismissed=true; document.getElementById('dueBanner').classList.remove('show'); }
+function markDueDone(idx){
+  var r=rows[idx]; if(!r) return;
+  if(!confirm('Mark this follow-up as done? It will be logged to this lead\u2019s history and removed from the reminder bar.')) return;
+  var d=r.detail||(r.detail={});
+  var prev=d.fudate||'';
+  d.history=d.history||[];
+  d.history.unshift({t:new Date().toISOString(), note:'\u2713 Followed up \u2014 marked done'+(prev?' (was scheduled '+prev+')':'')});
+  d.fudate='';
+  if(activeRowIdx===idx){ convHistory=d.history.slice(); renderHistory(); var fe=document.getElementById('p-fudate'); if(fe) fe.value=''; }
+  scheduleSave();
+  lastDueSig=null; renderDueBanner(); render();
+}
 function enableDesktopAlerts(){
   if(!('Notification' in window)){ alert('This browser does not support desktop notifications.'); return; }
   Notification.requestPermission().then(function(p){ if(p==='granted'){ var ab=document.getElementById('dueAlertBtn'); if(ab)ab.style.display='none'; startNotifyLoop(); notifyDue(true); } });
@@ -1729,7 +1773,7 @@ function render() {
     div.className = 'door-row';
     div.innerHTML = `
       <div class="cell">
-        <input class="stnum" type="text" value="${r.stnum}" placeholder="" pattern="[0-9]+[A-Ka-k]?" oninput="this.value=this.value.replace(/[^0-9A-Ka-k]/g,'').replace(/([A-Ka-k]).*$/,'$1');rows[${i}].stnum=this.value;markTalked(${i})" style="font-family:'DM Mono',monospace;width:100%;text-transform:uppercase;">
+        <input class="stnum" type="text" value="${r.stnum}" placeholder="" maxlength="6" pattern="[0-9]+[A-Ka-k]?" oninput="this.value=this.value.replace(/[^0-9A-Ka-k]/g,'').replace(/([A-Ka-k]).*$/,'$1');rows[${i}].stnum=this.value;markTalked(${i})" style="font-family:'DM Mono',monospace;text-transform:uppercase;">
       </div>
       <div class="cell">
         <select onchange="rows[${i}].race=this.value;stampKnock(${i});markTalked(${i})">
@@ -1742,7 +1786,7 @@ function render() {
         </select>
       </div>
       <div class="cell">
-        <input type="number" value="${r.age}" min="20" max="99" placeholder="" oninput="rows[${i}].age=this.value;stampKnock(${i});markTalked(${i})">
+        <input class="age" type="number" value="${r.age}" min="20" max="120" placeholder="" oninput="if(this.value.length>3)this.value=this.value.slice(0,3);rows[${i}].age=this.value;stampKnock(${i});markTalked(${i})">
       </div>
       <div class="cell">
         <select onchange="rows[${i}].temp=this.value;markTalked(${i})">
@@ -1761,7 +1805,7 @@ function render() {
         <input type="text" value="${r.lastknock||''}" placeholder="YY.MM.DD" maxlength="8" style="font-family:'DM Mono',monospace;font-size:12px;" oninput="rows[${i}].lastknock=this.value;scheduleSave()">
       </div>
       <div class="cell cell-note">
-        <input type="text" value="${r.note||''}" placeholder="Quick note…" oninput="rows[${i}].note=this.value;stampKnock(${i});markTalked(${i})">
+        <textarea rows="2" placeholder="Quick note…" oninput="rows[${i}].note=this.value;stampKnock(${i});markTalked(${i})">${escH(r.note||'')}</textarea>
       </div>
       <div class="cell">
         <button class="expand-btn${r.detail?' has-data':''}" onclick="openPanel(${i})" title="${r.detail?'Edit detail':'Add detail'}">

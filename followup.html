@@ -376,6 +376,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .due-banner-actions { margin-left: auto; display: flex; gap: 8px; }
 .due-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold2); border-radius: 5px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .due-btn:hover { background: var(--gold); color: var(--navy); }
+.due-done { flex-shrink:0; background:transparent; border:1px solid #5bbf7a; color:#7ed79a; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.due-done:hover { background:#5bbf7a; color:var(--navy); }
+@media (max-width: 700px) { .due-done { margin-left:auto; } }
 .due-list { display: flex; flex-direction: column; gap: 5px; }
 .due-item { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(201,168,76,0.25); border-radius: 5px; padding: 7px 12px; cursor: pointer; font-size: 13px; }
 .due-item:hover { background: rgba(201,168,76,0.18); }
@@ -1482,7 +1485,8 @@ function renderDueBanner() {
     div.innerHTML = '<span class="due-dot" style="background:' + dot + '"></span>'
       + '<span class="due-date">' + esc(x.r.fudate) + '</span>'
       + '<span class="due-name">' + esc(nm) + '</span>'
-      + '<span class="due-meta">' + esc(meta.join(' · ')) + '</span>';
+      + '<span class="due-meta">' + esc(meta.join(' · ')) + '</span>'
+      + '<button class="due-done" onclick="event.stopPropagation();markDueDone(' + x.idx + ')" title="Mark this follow-up done">&#10003; Done</button>';
     list.appendChild(div);
   });
   var parts = [];
@@ -1496,6 +1500,18 @@ function renderDueBanner() {
 function dismissDueBanner() {
   bannerDismissed = true;
   document.getElementById('dueBanner').classList.remove('show');
+}
+function markDueDone(idx){
+  var r=rows[idx]; if(!r) return;
+  if(!confirm('Mark this follow-up as done? It will be logged to this lead\u2019s history and removed from the reminder bar.')) return;
+  var d=r.detail||(r.detail={});
+  var prev=r.fudate||d.fudate||'';
+  d.history=d.history||[];
+  d.history.unshift({t:new Date().toISOString(), note:'\u2713 Followed up \u2014 marked done'+(prev?' (was scheduled '+prev+')':'')});
+  r.fudate=''; d.fudate='';
+  if(activeRowIdx===idx){ convHistory=d.history.slice(); renderHistory(); var fe=document.getElementById('p-fudate'); if(fe) fe.value=''; }
+  scheduleSave();
+  lastDueSig=null; renderDueBanner(); render();
 }
 
 function enableDesktopAlerts() {
