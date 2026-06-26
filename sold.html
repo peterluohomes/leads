@@ -95,6 +95,20 @@
     display:grid;place-items:center;transition:all .12s}
   .addbtn:hover{background:linear-gradient(150deg,var(--gold-2),var(--gold));border-color:transparent;color:var(--navy)}
 
+  /* Community moved onto the brand (PL · Sold) line */
+  .brand-community{flex:0 0 auto}
+  .brand-community .combo.community{width:200px;flex:0 0 auto;min-width:0}
+
+  /* Export / Import menu (sits next to +) */
+  .iomenu{position:relative;display:flex;flex:0 0 auto}
+  .iomenu .iobtn{font-size:15px}
+  .iopop{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:#fff;border:1px solid var(--line);
+    border-radius:10px;box-shadow:var(--shadow);padding:6px;display:none;min-width:150px}
+  .iomenu.open .iopop{display:block}
+  .iopop button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;
+    border-radius:7px;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer}
+  .iopop button:hover{background:var(--cream)}
+
   /* Keep Community, +, Street, Find address and Load strictly on one line at all widths. */
   .controls{flex-wrap:nowrap}
   .controls > .field{flex:1 1 0;min-width:0}
@@ -243,14 +257,8 @@
       <div>
         <h1>Sold</h1>
       </div>
-      <div class="brand-meta">
-        <div><b id="metaCount">—</b> records</div>
-        <div><span id="metaYears">—</span></div>
-      </div>
-    </div>
 
-    <div class="controls">
-      <div class="field">
+      <div class="field brand-community">
         <label>Community</label>
         <div class="community-wrap">
           <div class="combo community" id="comboCommunity">
@@ -261,9 +269,24 @@
             </div>
           </div>
           <button class="addbtn" id="addCommunityBtn" type="button" title="Add a community">+</button>
+          <div class="iomenu" id="ioMenu">
+            <button class="addbtn iobtn" id="ioBtn" type="button" title="Export / Import data">⇅</button>
+            <div class="iopop" id="ioPop">
+              <button type="button" id="ioExport">Export JSON</button>
+              <button type="button" id="ioImport">Import JSON</button>
+            </div>
+          </div>
+          <input id="ioFileInput" type="file" accept=".json,application/json" style="display:none">
         </div>
       </div>
 
+      <div class="brand-meta">
+        <div><b id="metaCount">—</b> records</div>
+        <div><span id="metaYears">—</span></div>
+      </div>
+    </div>
+
+    <div class="controls">
       <div class="field">
         <label>Street</label>
         <div class="combo street" id="comboStreet">
@@ -530,11 +553,51 @@ const comboLoaded=document.getElementById('comboLoaded');
 comboLoaded.querySelector('.combo-btn').addEventListener('click',()=> comboLoaded.classList.toggle('open'));
 comboLoaded._close=()=> comboLoaded.classList.remove('open');
 
+/* ---------------- Export / Import (JSON) ---------------- */
+const ioMenu=document.getElementById('ioMenu');
+document.getElementById('ioBtn').addEventListener('click',e=>{ e.stopPropagation(); ioMenu.classList.toggle('open'); });
+document.getElementById('ioExport').addEventListener('click',()=>{ ioMenu.classList.remove('open'); exportData(); });
+const ioFileInput=document.getElementById('ioFileInput');
+document.getElementById('ioImport').addEventListener('click',()=>{ ioMenu.classList.remove('open'); ioFileInput.click(); });
+ioFileInput.addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importData(f); e.target.value=''; });
+
+function exportData(){
+  const payload={ app:'sold', version:1, exportedAt:new Date().toISOString(),
+    communities:COMMUNITIES_LIST, imports:IMPORTS };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const a=document.createElement('a');
+  a.href=url; a.download='sold-data-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function importData(file){
+  try{
+    const data=JSON.parse(await file.text());
+    const imps=Array.isArray(data.imports)?data.imports:(Array.isArray(data)?data:[]);
+    const comms=Array.isArray(data.communities)?data.communities:[];
+    COMMUNITIES_LIST=[...new Set([...COMMUNITIES_LIST, ...comms])];
+    await dbPutMeta('communities', COMMUNITIES_LIST);
+    const existing=new Set(IMPORTS.map(i=>i.id));
+    let added=0;
+    for(const imp of imps){
+      if(!imp || !Array.isArray(imp.records)) continue;
+      if(!imp.id || existing.has(imp.id)) imp.id=Date.now()+'_'+Math.random().toString(36).slice(2,7);
+      existing.add(imp.id);
+      await dbPut(imp); IMPORTS.push(imp); added++;
+    }
+    rebuild();
+    alert('Imported '+added+' file'+(added===1?'':'s')+'.');
+  }catch(err){ alert('Import failed: '+(err&&err.message?err.message:err)); }
+}
+
 document.addEventListener('click',e=>{
   if(!comboCommunity.contains(e.target)) comboCommunity._close();
   if(!comboStreet.contains(e.target)) comboStreet._close();
   if(!comboType.contains(e.target)) comboType._close();
   if(!comboLoaded.contains(e.target)) comboLoaded._close();
+  if(!ioMenu.contains(e.target)) ioMenu.classList.remove('open');
 });
 
 /* ---------------- Years (one line) ---------------- */
