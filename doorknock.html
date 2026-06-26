@@ -599,20 +599,32 @@ body {
   .toolbar-btns .btn:last-of-type { border-radius: 0 6px 6px 0; }
   #autosave-status { display: none !important; }
 
-  /* simplified grid for phone — hide note, show on expand */
+  /* Phone: main fields + [+] on one line; Quick Note on two half-height lines below */
   .col-headers {
-    grid-template-columns: 90px 88px 60px 70px 1fr 50px;
+    grid-template-columns: 46px minmax(0,1fr) minmax(0,1fr) 62px 74px 44px;
     padding: 8px 10px 8px 12px;
   }
   .col-headers span { font-size: 11px; }
-  /* hide gender col (4th) on phone */
+  /* hide Age (4th) + Quick Note (7th) headers on phone */
   .col-headers span:nth-child(4),
+  .col-headers span:nth-child(7) { display: none; }
+  /* hide Age cell in each row */
   .door-row .cell:nth-child(4) { display: none; }
 
   .door-row {
-    grid-template-columns: 90px 88px 60px 70px 1fr 50px;
+    grid-template-columns: 46px minmax(0,1fr) minmax(0,1fr) 62px 74px 44px;
+    grid-template-rows: var(--row-h) var(--row-h);
     padding: 5px 10px 5px 12px;
-    min-height: var(--row-h);
+    min-height: calc(var(--row-h) * 2);
+    row-gap: 0;
+  }
+  /* + button sits at the end of the main line, right after Last Knock */
+  .door-row .cell:nth-child(8) { grid-column: 6; grid-row: 1; }
+  /* Quick Note moves to a full-width second area: two lines, each half the row height */
+  .door-row .cell-note { grid-column: 1 / -1; grid-row: 2; align-self: stretch; }
+  .door-row .cell-note textarea {
+    height: var(--row-h);
+    line-height: calc(var(--row-h) / 2);
   }
 
   .expand-btn { width: 42px; height: 42px; font-size: 20px; }
